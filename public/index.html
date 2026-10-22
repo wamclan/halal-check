@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Halal Check</title>
+<meta name="description" content="Scan a barcode or ingredient list and see if a food product contains haram or doubtful (mushbooh) ingredients. English, Nederlands, العربية.">
+<meta name="theme-color" content="#0F6B4F">
+<link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="in">
+  <a class="brand" href="/"><i></i><span id="brandName">Halal Check</span></a>
+  <div class="langs" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="nl" aria-pressed="false">NL</button>
+    <button type="button" data-lang="ar" aria-pressed="false">عربي</button>
+  </div>
+</div></header>
+
+<main>
+<section class="intro">
+  <h1 id="tTitle">Is this product halal?</h1>
+  <p id="tIntro"></p>
+</section>
+
+<div class="tabs" role="tablist">
+  <button type="button" role="tab" id="tab-barcode" data-tab="barcode" aria-selected="true"></button>
+  <button type="button" role="tab" id="tab-photo" data-tab="photo" aria-selected="false"></button>
+  <button type="button" role="tab" id="tab-text" data-tab="text" aria-selected="false"></button>
+  <button type="button" role="tab" id="tab-e" data-tab="e" aria-selected="false"></button>
+</div>
+
+<section class="panel" id="panel-barcode" role="tabpanel">
+  <p class="hint" id="tBarcodeHint"></p>
+  <div class="finder" id="finder" hidden><video id="cam" playsinline muted></video></div>
+  <p class="status" id="camStatus" role="status"></p>
+  <div class="row">
+    <button type="button" class="btn" id="btnCam"></button>
+    <label class="btn ghost" for="barcodePhoto" id="lblBarcodePhoto"></label>
+    <input class="vh" type="file" id="barcodePhoto" accept="image/*" capture="environment">
+  </div>
+  <label class="hint" for="barcodeInput" id="tManual"></label>
+  <div class="row">
+    <input class="field code ltr" id="barcodeInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="14">
+    <button type="button" class="btn" id="btnLookup"></button>
+  </div>
+</section>
+
+<section class="panel" id="panel-photo" role="tabpanel" hidden>
+  <p class="hint" id="tPhotoHint"></p>
+  <label class="drop" for="photoInput">
+    <span id="dropIdle"><strong id="tDropTitle"></strong><br><span class="hint" id="tDropSub"></span></span>
+    <img id="preview" alt="" hidden>
+  </label>
+  <input class="vh" type="file" id="photoInput" accept="image/*" capture="environment">
+  <div class="row">
+    <button type="button" class="btn" id="btnPhoto" disabled></button>
+    <button type="button" class="btn ghost" id="btnStop" hidden></button>
+  </div>
+  <p class="status" id="photoStatus" role="status"></p>
+</section>
+
+<section class="panel" id="panel-text" role="tabpanel" hidden>
+  <label for="ingText" class="hint" id="tTextHint"></label>
+  <textarea id="ingText" spellcheck="false"></textarea>
+  <div class="chips" id="examples"></div>
+  <div class="row">
+    <button type="button" class="btn" id="btnText"></button>
+    <button type="button" class="btn ghost" id="btnClear"></button>
+  </div>
+</section>
+
+<section class="panel" id="panel-e" role="tabpanel" hidden>
+  <label for="eInput" class="hint" id="tEHint"></label>
+  <div class="row">
+    <input class="field code ltr" id="eInput" autocomplete="off" placeholder="E471">
+    <button type="button" class="btn" id="btnE"></button>
+  </div>
+</section>
+
+<section id="result" hidden aria-live="polite"></section>
+</main>
+
+<footer class="foot">
+  <a href="/legal" id="footLegal"></a>
+</footer>
+</div>
+<script src="/vendor/zxing.min.js" defer></script>
+<script src="/js/i18n.js" defer></script>
+<script src="/js/engine.js" defer></script>
+<script src="/js/scanner.js" defer></script>
+<script src="/js/app.js" defer></script>
+</body>
+</html>

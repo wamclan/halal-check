@@ -1,0 +1,961 @@
+{
+ "meta": {
+  "version": "0.2.0",
+  "updated": "2026-10-22",
+  "reviewStatus": "draft",
+  "reviewedBy": null,
+  "note": "Draft rules written without scholarly review. Do not present as a ruling."
+ },
+ "rules": [
+  {
+   "id": "pork",
+   "status": "bad",
+   "name": {
+    "en": "Pork",
+    "nl": "Varkensvlees",
+    "ar": "لحم الخنزير"
+   },
+   "reason": {
+    "en": "Pork and pork products are haram.",
+    "nl": "Varkensvlees en producten ervan zijn haram.",
+    "ar": "لحم الخنزير ومنتجاته حرام."
+   },
+   "terms": [
+    "pork",
+    "pig",
+    "pigs",
+    "swine",
+    "ham",
+    "bacon",
+    "lard",
+    "pancetta",
+    "prosciutto",
+    "chorizo",
+    "varken",
+    "varkens",
+    "varkensvlees",
+    "varkensvet",
+    "spek",
+    "reuzel",
+    "ontbijtspek",
+    "خنزير",
+    "الخنزير",
+    "لحم الخنزير",
+    "شحم الخنزير",
+    "لارد"
+   ]
+  },
+  {
+   "id": "alcohol",
+   "status": "bad",
+   "name": {
+    "en": "Alcohol",
+    "nl": "Alcohol",
+    "ar": "كحول"
+   },
+   "reason": {
+    "en": "Alcohol and alcoholic drinks are haram.",
+    "nl": "Alcohol en alcoholische dranken zijn haram.",
+    "ar": "الكحول والمشروبات الكحولية حرام."
+   },
+   "terms": [
+    "alcohol",
+    "ethanol",
+    "ethyl alcohol",
+    "wine",
+    "beer",
+    "rum",
+    "whisky",
+    "whiskey",
+    "brandy",
+    "liqueur",
+    "vodka",
+    "cognac",
+    "champagne",
+    "sherry",
+    "mirin",
+    "wijn",
+    "bier",
+    "likeur",
+    "wodka",
+    "kookwijn",
+    "كحول",
+    "الكحول",
+    "إيثانول",
+    "ايثانول",
+    "نبيذ",
+    "خمر",
+    "بيرة",
+    "روم",
+    "ويسكي",
+    "فودكا"
+   ]
+  },
+  {
+   "id": "blood",
+   "status": "bad",
+   "name": {
+    "en": "Blood",
+    "nl": "Bloed",
+    "ar": "دم"
+   },
+   "reason": {
+    "en": "Blood and blood plasma are haram.",
+    "nl": "Bloed en bloedplasma zijn haram.",
+    "ar": "الدم وبلازما الدم حرام."
+   },
+   "terms": [
+    "blood",
+    "blood plasma",
+    "bloed",
+    "bloedplasma",
+    "بلازما الدم",
+    "دم الحيوان"
+   ]
+  },
+  {
+   "id": "gelatin",
+   "status": "warn",
+   "name": {
+    "en": "Gelatin",
+    "nl": "Gelatine",
+    "ar": "جيلاتين"
+   },
+   "reason": {
+    "en": "The source can be animal (including pork) or plant. Look for a halal mark or a plant-based statement.",
+    "nl": "De herkomst kan dierlijk (ook varken) of plantaardig zijn. Zoek een halallogo of plantaardige vermelding.",
+    "ar": "قد يكون المصدر حيوانياً (بما في ذلك الخنزير) أو نباتياً. ابحث عن علامة حلال أو بيان نباتي."
+   },
+   "terms": [
+    "gelatin",
+    "gelatine",
+    "gelatina",
+    "جيلاتين",
+    "جلاتين",
+    "الجيلاتين"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "collagen",
+   "status": "warn",
+   "name": {
+    "en": "Collagen",
+    "nl": "Collageen",
+    "ar": "كولاجين"
+   },
+   "reason": {
+    "en": "The source can be animal (including pork) or plant. Look for a halal mark or a plant-based statement.",
+    "nl": "De herkomst kan dierlijk (ook varken) of plantaardig zijn. Zoek een halallogo of plantaardige vermelding.",
+    "ar": "قد يكون المصدر حيوانياً (بما في ذلك الخنزير) أو نباتياً. ابحث عن علامة حلال أو بيان نباتي."
+   },
+   "terms": [
+    "collagen",
+    "collageen",
+    "كولاجين"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "animal-fat-or-tallow",
+   "status": "warn",
+   "name": {
+    "en": "Animal fat or tallow",
+    "nl": "Dierlijk vet of talg",
+    "ar": "دهن حيواني"
+   },
+   "reason": {
+    "en": "Meat must come from halal slaughter. No halal statement was found.",
+    "nl": "Vlees moet van halal geslacht vee komen. Er is geen halalvermelding gevonden.",
+    "ar": "يجب أن يكون اللحم من ذبح حلال. لم تُذكر عبارة حلال."
+   },
+   "terms": [
+    "animal fat",
+    "animal fats",
+    "animal shortening",
+    "tallow",
+    "suet",
+    "beef fat",
+    "dierlijk vet",
+    "dierlijke vetten",
+    "rundvet",
+    "rundervet",
+    "talg",
+    "دهون حيوانية",
+    "دهن حيواني",
+    "شحم حيواني"
+   ],
+   "clearedBy": "halal"
+  },
+  {
+   "id": "meat",
+   "status": "warn",
+   "name": {
+    "en": "Meat",
+    "nl": "Vlees",
+    "ar": "لحم"
+   },
+   "reason": {
+    "en": "Meat must come from halal slaughter. No halal statement was found.",
+    "nl": "Vlees moet van halal geslacht vee komen. Er is geen halalvermelding gevonden.",
+    "ar": "يجب أن يكون اللحم من ذبح حلال. لم تُذكر عبارة حلال."
+   },
+   "terms": [
+    "meat",
+    "beef",
+    "chicken",
+    "lamb",
+    "mutton",
+    "turkey",
+    "veal",
+    "gelatinous meat",
+    "vlees",
+    "rund",
+    "rundvlees",
+    "kip",
+    "kippenvlees",
+    "lam",
+    "lamsvlees",
+    "kalkoen",
+    "kalfsvlees",
+    "لحم",
+    "لحوم",
+    "دجاج",
+    "لحم بقري",
+    "لحم غنم"
+   ],
+   "clearedBy": "halal"
+  },
+  {
+   "id": "rennet",
+   "status": "warn",
+   "name": {
+    "en": "Rennet",
+    "nl": "Stremsel",
+    "ar": "منفحة"
+   },
+   "reason": {
+    "en": "May be made with animal rennet from non-halal slaughter.",
+    "nl": "Kan gemaakt zijn met dierlijk stremsel van niet-halal geslacht vee.",
+    "ar": "قد يُصنع بمنفحة حيوانية من ذبح غير حلال."
+   },
+   "terms": [
+    "rennet",
+    "stremsel",
+    "منفحة",
+    "المنفحة"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "cheese",
+   "status": "warn",
+   "name": {
+    "en": "Cheese",
+    "nl": "Kaas",
+    "ar": "جبن"
+   },
+   "reason": {
+    "en": "May be made with animal rennet from non-halal slaughter.",
+    "nl": "Kan gemaakt zijn met dierlijk stremsel van niet-halal geslacht vee.",
+    "ar": "قد يُصنع بمنفحة حيوانية من ذبح غير حلال."
+   },
+   "terms": [
+    "cheese",
+    "kaas",
+    "cheddar",
+    "gouda",
+    "mozzarella",
+    "parmesan",
+    "جبن",
+    "جبنة"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "whey",
+   "status": "warn",
+   "name": {
+    "en": "Whey",
+    "nl": "Wei",
+    "ar": "مصل اللبن"
+   },
+   "reason": {
+    "en": "May be made with animal rennet from non-halal slaughter.",
+    "nl": "Kan gemaakt zijn met dierlijk stremsel van niet-halal geslacht vee.",
+    "ar": "قد يُصنع بمنفحة حيوانية من ذبح غير حلال."
+   },
+   "terms": [
+    "whey",
+    "whey powder",
+    "wei",
+    "weipoeder",
+    "melkserum",
+    "مصل اللبن",
+    "مصل الحليب"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "carmine-cochineal",
+   "status": "warn",
+   "name": {
+    "en": "Carmine (cochineal)",
+    "nl": "Karmijn (cochenille)",
+    "ar": "كارمين (قرمز)"
+   },
+   "reason": {
+    "en": "Made from insects. Scholars differ: many avoid it.",
+    "nl": "Gemaakt van insecten. Geleerden verschillen van mening: velen vermijden het.",
+    "ar": "مصنوع من الحشرات. العلماء مختلفون وكثيرون يتجنبونه."
+   },
+   "terms": [
+    "carmine",
+    "carminic acid",
+    "cochineal",
+    "karmijn",
+    "karmijnzuur",
+    "cochenille",
+    "كارمين",
+    "قرمز",
+    "الكارمين",
+    "قرمزي"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "shellac",
+   "status": "warn",
+   "name": {
+    "en": "Shellac",
+    "nl": "Schellak",
+    "ar": "شمع اللك"
+   },
+   "reason": {
+    "en": "Made from insects. Scholars differ: many avoid it.",
+    "nl": "Gemaakt van insecten. Geleerden verschillen van mening: velen vermijden het.",
+    "ar": "مصنوع من الحشرات. العلماء مختلفون وكثيرون يتجنبونه."
+   },
+   "terms": [
+    "shellac",
+    "schellak",
+    "glazing agent shellac",
+    "شيلاك",
+    "اللك"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "natural-flavouring",
+   "status": "warn",
+   "name": {
+    "en": "Natural flavouring",
+    "nl": "Natuurlijk aroma",
+    "ar": "نكهة طبيعية"
+   },
+   "reason": {
+    "en": "Often uses alcohol as a carrier or solvent.",
+    "nl": "Gebruikt vaak alcohol als drager of oplosmiddel.",
+    "ar": "كثيراً ما يستخدم الكحول كحامل أو مذيب."
+   },
+   "terms": [
+    "natural flavour",
+    "natural flavours",
+    "natural flavouring",
+    "natural flavourings",
+    "natural flavor",
+    "natural flavors",
+    "natural flavoring",
+    "flavouring",
+    "flavourings",
+    "flavoring",
+    "flavorings",
+    "flavour",
+    "flavor",
+    "aroma",
+    "aroma's",
+    "aromas",
+    "natuurlijk aroma",
+    "natuurlijke aroma's",
+    "natuurlijke smaakstof",
+    "natuurlijke smaakstoffen",
+    "smaakstof",
+    "smaakstoffen",
+    "نكهة طبيعية",
+    "نكهات طبيعية",
+    "نكهة",
+    "نكهات"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "vanilla-extract",
+   "status": "warn",
+   "name": {
+    "en": "Vanilla extract",
+    "nl": "Vanille-extract",
+    "ar": "مستخلص الفانيليا"
+   },
+   "reason": {
+    "en": "Often uses alcohol as a carrier or solvent.",
+    "nl": "Gebruikt vaak alcohol als drager of oplosmiddel.",
+    "ar": "كثيراً ما يستخدم الكحول كحامل أو مذيب."
+   },
+   "terms": [
+    "vanilla extract",
+    "vanille extract",
+    "vanille-extract",
+    "vanilla essence",
+    "مستخلص الفانيليا",
+    "خلاصة الفانيليا"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "emulsifier-source-unknown",
+   "status": "warn",
+   "name": {
+    "en": "Emulsifier (source unknown)",
+    "nl": "Emulgator (herkomst onbekend)",
+    "ar": "مستحلب (مصدر غير معروف)"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   },
+   "terms": [
+    "emulsifier",
+    "emulsifiers",
+    "emulgator",
+    "emulgatoren",
+    "مستحلب",
+    "مستحلبات"
+   ],
+   "clearedBy": "any",
+   "skipWhenENumberPresent": true
+  },
+  {
+   "id": "mono-and-diglycerides",
+   "status": "warn",
+   "name": {
+    "en": "Mono- and diglycerides",
+    "nl": "Mono- en diglyceriden",
+    "ar": "أحادي وثنائي الغليسريد"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   },
+   "terms": [
+    "mono- and diglycerides",
+    "mono and diglycerides",
+    "monoglycerides",
+    "diglycerides",
+    "mono- en diglyceriden",
+    "mono en diglyceriden",
+    "monoglyceriden",
+    "diglyceriden",
+    "أحادي وثنائي الغليسريد",
+    "أحادي الغليسريد"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "glycerol",
+   "status": "warn",
+   "name": {
+    "en": "Glycerol",
+    "nl": "Glycerol",
+    "ar": "غليسرين"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   },
+   "terms": [
+    "glycerol",
+    "glycerin",
+    "glycerine",
+    "glycerolen",
+    "غليسرين",
+    "جلسرين",
+    "غلسرين",
+    "غليسيرين"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "enzymes",
+   "status": "warn",
+   "name": {
+    "en": "Enzymes",
+    "nl": "Enzymen",
+    "ar": "إنزيمات"
+   },
+   "reason": {
+    "en": "Enzymes can come from animals, including pigs, or from microbes.",
+    "nl": "Enzymen kunnen van dieren komen, ook van varkens, of van micro-organismen.",
+    "ar": "قد تكون الإنزيمات من حيوانات منها الخنزير أو من كائنات دقيقة."
+   },
+   "terms": [
+    "enzyme",
+    "enzymes",
+    "enzym",
+    "enzymen",
+    "pepsin",
+    "pepsine",
+    "إنزيمات",
+    "انزيمات",
+    "إنزيم",
+    "انزيم"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "l-cysteine",
+   "status": "warn",
+   "name": {
+    "en": "L-cysteine",
+    "nl": "L-cysteïne",
+    "ar": "إل-سيستين"
+   },
+   "reason": {
+    "en": "Can be made from animal or human hair and feathers.",
+    "nl": "Kan gemaakt zijn van dierlijk of menselijk haar en veren.",
+    "ar": "قد يُصنع من شعر الحيوان أو الإنسان أو الريش."
+   },
+   "terms": [
+    "l-cysteine",
+    "cysteine",
+    "l-cystine",
+    "cystine",
+    "l-cysteïne",
+    "cysteïne",
+    "سيستين"
+   ],
+   "clearedBy": "any"
+  },
+  {
+   "id": "bone-products",
+   "status": "warn",
+   "name": {
+    "en": "Bone products",
+    "nl": "Beenderproducten",
+    "ar": "منتجات العظام"
+   },
+   "reason": {
+    "en": "Made from animal bones. Source of the animal is unknown.",
+    "nl": "Gemaakt van dierlijke botten. De diersoort is onbekend.",
+    "ar": "مصنوع من عظام الحيوان. نوع الحيوان غير معروف."
+   },
+   "terms": [
+    "bone",
+    "bones",
+    "bone meal",
+    "bone char",
+    "bone phosphate",
+    "beenderen",
+    "botten",
+    "beendermeel",
+    "عظام",
+    "مسحوق العظام"
+   ],
+   "clearedBy": "any"
+  }
+ ],
+ "eNumbers": {
+  "120": {
+   "status": "warn",
+   "name": {
+    "en": "Carmine (cochineal)",
+    "nl": "Karmijn (cochenille)",
+    "ar": "كارمين (قرمز)"
+   },
+   "reason": {
+    "en": "Made from insects. Scholars differ: many avoid it.",
+    "nl": "Gemaakt van insecten. Geleerden verschillen van mening: velen vermijden het.",
+    "ar": "مصنوع من الحشرات. العلماء مختلفون وكثيرون يتجنبونه."
+   }
+  },
+  "153": {
+   "status": "warn",
+   "name": {
+    "en": "Vegetable carbon",
+    "nl": "Plantaardige koolstof",
+    "ar": "كربون نباتي"
+   },
+   "reason": {
+    "en": "Usually plant based, but can come from bones or other animal matter.",
+    "nl": "Meestal plantaardig, maar kan van botten of ander dierlijk materiaal komen.",
+    "ar": "غالباً نباتي لكن قد يكون من العظام أو مواد حيوانية."
+   }
+  },
+  "422": {
+   "status": "warn",
+   "name": {
+    "en": "Glycerol",
+    "nl": "Glycerol",
+    "ar": "غليسرين"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "430": {
+   "status": "warn",
+   "name": {
+    "en": "Polyoxyethylene stearate",
+    "nl": "Polyoxyethyleenstearaat",
+    "ar": "ستيارات البولي أوكسي إيثيلين"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "431": {
+   "status": "warn",
+   "name": {
+    "en": "Polyoxyethylene (40) stearate",
+    "nl": "Polyoxyethyleen(40)stearaat",
+    "ar": "ستيارات البولي أوكسي إيثيلين"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "441": {
+   "status": "warn",
+   "name": {
+    "en": "Gelatin",
+    "nl": "Gelatine",
+    "ar": "جيلاتين"
+   },
+   "reason": {
+    "en": "The source can be animal (including pork) or plant. Look for a halal mark or a plant-based statement.",
+    "nl": "De herkomst kan dierlijk (ook varken) of plantaardig zijn. Zoek een halallogo of plantaardige vermelding.",
+    "ar": "قد يكون المصدر حيوانياً (بما في ذلك الخنزير) أو نباتياً. ابحث عن علامة حلال أو بيان نباتي."
+   }
+  },
+  "470": {
+   "status": "warn",
+   "name": {
+    "en": "Fatty acid salts",
+    "nl": "Zouten van vetzuren",
+    "ar": "أملاح الأحماض الدهنية"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "471": {
+   "status": "warn",
+   "name": {
+    "en": "Mono- and diglycerides of fatty acids",
+    "nl": "Mono- en diglyceriden van vetzuren",
+    "ar": "أحادي وثنائي الغليسريد للأحماض الدهنية"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "472": {
+   "status": "warn",
+   "name": {
+    "en": "Esters of mono- and diglycerides",
+    "nl": "Esters van mono- en diglyceriden",
+    "ar": "استرات أحادي وثنائي الغليسريد"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "473": {
+   "status": "warn",
+   "name": {
+    "en": "Sucrose esters of fatty acids",
+    "nl": "Sucrose-esters van vetzuren",
+    "ar": "استرات السكروز للأحماض الدهنية"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "475": {
+   "status": "warn",
+   "name": {
+    "en": "Polyglycerol esters",
+    "nl": "Polyglycerolesters",
+    "ar": "استرات متعدد الغليسرول"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "476": {
+   "status": "warn",
+   "name": {
+    "en": "Polyglycerol polyricinoleate",
+    "nl": "Polyglycerolpolyricinoleaat",
+    "ar": "بولي ريسينولييت متعدد الغليسرول"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "477": {
+   "status": "warn",
+   "name": {
+    "en": "Propylene glycol esters",
+    "nl": "Propyleenglycolesters",
+    "ar": "استرات بروبيلين جليكول"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "481": {
+   "status": "warn",
+   "name": {
+    "en": "Sodium stearoyl lactylate",
+    "nl": "Natriumstearoyllactylaat",
+    "ar": "ستيروئيل لاكتيلات الصوديوم"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "482": {
+   "status": "warn",
+   "name": {
+    "en": "Calcium stearoyl lactylate",
+    "nl": "Calciumstearoyllactylaat",
+    "ar": "ستيروئيل لاكتيلات الكالسيوم"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "491": {
+   "status": "warn",
+   "name": {
+    "en": "Sorbitan monostearate",
+    "nl": "Sorbitaanmonostearaat",
+    "ar": "أحادي ستيارات السوربيتان"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "492": {
+   "status": "warn",
+   "name": {
+    "en": "Sorbitan tristearate",
+    "nl": "Sorbitaantristearaat",
+    "ar": "ثلاثي ستيارات السوربيتان"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "542": {
+   "status": "warn",
+   "name": {
+    "en": "Edible bone phosphate",
+    "nl": "Eetbaar beenderfosfaat",
+    "ar": "فوسفات العظام الصالح للأكل"
+   },
+   "reason": {
+    "en": "Made from animal bones. Source of the animal is unknown.",
+    "nl": "Gemaakt van dierlijke botten. De diersoort is onbekend.",
+    "ar": "مصنوع من عظام الحيوان. نوع الحيوان غير معروف."
+   }
+  },
+  "570": {
+   "status": "warn",
+   "name": {
+    "en": "Stearic acid",
+    "nl": "Stearinezuur",
+    "ar": "حمض الستياريك"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "572": {
+   "status": "warn",
+   "name": {
+    "en": "Magnesium stearate",
+    "nl": "Magnesiumstearaat",
+    "ar": "ستيارات المغنيسيوم"
+   },
+   "reason": {
+    "en": "Made from fatty acids that can be animal or plant. Source is not stated.",
+    "nl": "Gemaakt van vetzuren die dierlijk of plantaardig kunnen zijn. De herkomst staat er niet bij.",
+    "ar": "مصنوع من أحماض دهنية قد تكون حيوانية أو نباتية. المصدر غير مذكور."
+   }
+  },
+  "627": {
+   "status": "warn",
+   "name": {
+    "en": "Disodium guanylate",
+    "nl": "Dinatriumguanylaat",
+    "ar": "غوانيلات ثنائي الصوديوم"
+   },
+   "reason": {
+    "en": "Often made from meat or fish extracts. Can also be made by fermentation.",
+    "nl": "Vaak gemaakt van vlees- of visextract. Kan ook door fermentatie gemaakt zijn.",
+    "ar": "يُصنع غالباً من مستخلصات اللحم أو السمك، ويمكن إنتاجه بالتخمير."
+   }
+  },
+  "631": {
+   "status": "warn",
+   "name": {
+    "en": "Disodium inosinate",
+    "nl": "Dinatriuminosinaat",
+    "ar": "إينوسينات ثنائي الصوديوم"
+   },
+   "reason": {
+    "en": "Often made from meat or fish extracts. Can also be made by fermentation.",
+    "nl": "Vaak gemaakt van vlees- of visextract. Kan ook door fermentatie gemaakt zijn.",
+    "ar": "يُصنع غالباً من مستخلصات اللحم أو السمك، ويمكن إنتاجه بالتخمير."
+   }
+  },
+  "635": {
+   "status": "warn",
+   "name": {
+    "en": "Disodium 5'-ribonucleotides",
+    "nl": "Dinatrium-5'-ribonucleotiden",
+    "ar": "ريبونوكليوتيدات ثنائي الصوديوم"
+   },
+   "reason": {
+    "en": "Often made from meat or fish extracts. Can also be made by fermentation.",
+    "nl": "Vaak gemaakt van vlees- of visextract. Kan ook door fermentatie gemaakt zijn.",
+    "ar": "يُصنع غالباً من مستخلصات اللحم أو السمك، ويمكن إنتاجه بالتخمير."
+   }
+  },
+  "904": {
+   "status": "warn",
+   "name": {
+    "en": "Shellac",
+    "nl": "Schellak",
+    "ar": "شمع اللك"
+   },
+   "reason": {
+    "en": "Made from insects. Scholars differ: many avoid it.",
+    "nl": "Gemaakt van insecten. Geleerden verschillen van mening: velen vermijden het.",
+    "ar": "مصنوع من الحشرات. العلماء مختلفون وكثيرون يتجنبونه."
+   }
+  },
+  "913": {
+   "status": "warn",
+   "name": {
+    "en": "Lanolin",
+    "nl": "Lanoline",
+    "ar": "لانولين"
+   },
+   "reason": {
+    "en": "The source can be animal (including pork) or plant. Look for a halal mark or a plant-based statement.",
+    "nl": "De herkomst kan dierlijk (ook varken) of plantaardig zijn. Zoek een halallogo of plantaardige vermelding.",
+    "ar": "قد يكون المصدر حيوانياً (بما في ذلك الخنزير) أو نباتياً. ابحث عن علامة حلال أو بيان نباتي."
+   }
+  },
+  "920": {
+   "status": "warn",
+   "name": {
+    "en": "L-cysteine",
+    "nl": "L-cysteïne",
+    "ar": "إل-سيستين"
+   },
+   "reason": {
+    "en": "Can be made from animal or human hair and feathers.",
+    "nl": "Kan gemaakt zijn van dierlijk of menselijk haar en veren.",
+    "ar": "قد يُصنع من شعر الحيوان أو الإنسان أو الريش."
+   }
+  },
+  "921": {
+   "status": "warn",
+   "name": {
+    "en": "L-cystine",
+    "nl": "L-cystine",
+    "ar": "إل-سيستين"
+   },
+   "reason": {
+    "en": "Can be made from animal or human hair and feathers.",
+    "nl": "Kan gemaakt zijn van dierlijk of menselijk haar en veren.",
+    "ar": "قد يُصنع من شعر الحيوان أو الإنسان أو الريش."
+   }
+  },
+  "1000": {
+   "status": "warn",
+   "name": {
+    "en": "Cholic acid",
+    "nl": "Cholzuur",
+    "ar": "حمض الكوليك"
+   },
+   "reason": {
+    "en": "The source can be animal (including pork) or plant. Look for a halal mark or a plant-based statement.",
+    "nl": "De herkomst kan dierlijk (ook varken) of plantaardig zijn. Zoek een halallogo of plantaardige vermelding.",
+    "ar": "قد يكون المصدر حيوانياً (بما في ذلك الخنزير) أو نباتياً. ابحث عن علامة حلال أو بيان نباتي."
+   }
+  },
+  "1105": {
+   "status": "warn",
+   "name": {
+    "en": "Lysozyme",
+    "nl": "Lysozym",
+    "ar": "ليزوزيم"
+   },
+   "reason": {
+    "en": "Enzymes can come from animals, including pigs, or from microbes.",
+    "nl": "Enzymen kunnen van dieren komen, ook van varkens, of van micro-organismen.",
+    "ar": "قد تكون الإنزيمات من حيوانات منها الخنزير أو من كائنات دقيقة."
+   }
+  },
+  "1510": {
+   "status": "warn",
+   "name": {
+    "en": "Ethanol",
+    "nl": "Ethanol",
+    "ar": "إيثانول"
+   },
+   "reason": {
+    "en": "Pure alcohol (ethanol), used as a solvent.",
+    "nl": "Pure alcohol (ethanol), gebruikt als oplosmiddel.",
+    "ar": "كحول نقي (إيثانول) يُستخدم كمذيب."
+   }
+  }
+ }
+}
