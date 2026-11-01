@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = id => document.getElementById(id);
-  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, ctl: null, camOn: false};
+  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false};
   const L = () => I18N[state.lang];
   const pick = v => (v && typeof v === "object") ? (v[state.lang] || v.en) : v;
   function el(tag, cls, text) {
@@ -51,7 +51,7 @@
     const h = el("div", "h");
     const b = el("b", null, pick(it.name));
     if (it.code) b.append(el("span", "code", " " + it.code));
-    h.append(b, el("span", "badge " + it.status, it.status === "bad" ? t.sBad : it.status === "warn" ? t.sWarn : t.sOk));
+    h.append(b, el("span", "badge " + it.status, it.status === "bad" ? t.sBad : it.status === "warn" ? t.sWarn : it.status === "unknown" ? t.sUnknown : t.sOk));
     li.append(h);
     if (it.status === "ok") li.append(el("p", null, t.statedOk));
     else if (it.why) li.append(el("p", null, pick(it.why)));
@@ -89,8 +89,8 @@
     } else {
       const v = el("div", "verdict " + r.verdict);
       v.append(el("span", "tag", t.tag));
-      v.append(el("h2", null, r.verdict === "bad" ? t.vBad : r.verdict === "warn" ? t.vWarn : t.vOk));
-      const desc = r.mode === "e" && !r.items.length ? t.eNotFound : r.verdict === "bad" ? t.dBad : r.verdict === "warn" ? t.dWarn : t.dOk;
+      v.append(el("h2", null, r.verdict === "bad" ? t.vBad : r.verdict === "warn" ? t.vWarn : r.verdict === "review" ? t.vReview : t.vOk));
+      const desc = r.mode === "e" && !r.items.length ? t.eNotFound : r.verdict === "bad" ? t.dBad : r.verdict === "warn" ? t.dWarn : r.verdict === "review" ? t.dReview : t.dOk;
       v.append(el("p", null, desc));
       v.append(el("p", "cert", t.notCert));
       box.append(v);
@@ -129,14 +129,45 @@
   }
 
   function showAnalysis(mode, items, read) {
-    state.result = {kind: "analysis", mode, items, verdict: state.eng.verdictOf(items), read};
+    let verdict = state.eng.verdictOf(items);
+    if (verdict === "ok" && items.some(i => i.status === "unknown")) verdict = "review";
+    state.result = {kind: "analysis", mode, items, verdict, read};
     render();
+  }
+
+  // The quick rules are only a subset of the evidence catalogue. Explicitly
+  // report every E code, including unknown codes, without equating missing
+  // information with halal or haram.
+  function evidenceForCode(code) {
+    const row = state.evidence && state.evidence.byCode.get(code.toLowerCase());
+    if (!row) return {
+      status: "unknown", code, name: {en: code,nl: code,ar: code},
+      why: {en: "This E-code has not been individually assessed. No halal conclusion is possible.",
+        nl: "Dit E-nummer is niet individueel beoordeeld. Een halalconclusie is niet mogelijk.",
+        ar: "لم يُراجع هذا الرمز بصورة فردية؛ لا يمكن إصدار حكم بالحلال أو الحرام."}
+    };
+    return {
+      status: row.status === "verify" ? "warn" : row.status === "haram_indicator" ? "bad" : "unknown",
+      code, name: {en: row.en || code,nl: row.nl || row.en || code,ar: row.ar || row.en || code},
+      why: {en: row.why || "",nl: row.why_nl || row.why || "",ar: row.why_ar || row.why || ""}
+    };
+  }
+  function supplementE(text, items) {
+    const present = new Set(items.filter(i => i.code).map(i => i.code.toLowerCase()));
+    const re = /(?<![\\p{L}\\p{N}])e[\\s-]*(\\d{3,4})([a-z])?(?:\\s*\\(\\s*(i{1,3}|iv|v)\\s*\\))?(?![\\p{L}\\p{N}])/giu;
+    for (const m of String(text || "").matchAll(re)) {
+      const code = "E" + m[1] + (m[2] || "").toLowerCase() + (m[3] ? "(" + m[3].toLowerCase() + ")" : "");
+      if (present.has(code.toLowerCase())) continue;
+      const item = evidenceForCode(code);
+      items.push(item);present.add(code.toLowerCase());
+    }
+    return items;
   }
 
   function runText(text, read) {
     if (!ready()) return;
     if (!String(text).trim()) { state.result = {kind: "message", msg: "none"}; return render(); }
-    showAnalysis("text", state.eng.analyse(text), read || null);
+    showAnalysis("text", supplementE(text, state.eng.analyse(text)), read || null);
   }
 
   function runE() {
@@ -144,7 +175,9 @@
     const f = state.eng.lookupE($("eInput").value);
     if (f) $("evidenceLookup").href = "/encyclopedia?q=" + encodeURIComponent(f.code);
     if (!f) { state.result = {kind: "message", msg: "eBadFmt"}; return render(); }
-    showAnalysis("e", f.rule ? [{status: f.rule.status, name: f.rule.name, why: f.rule.reason, code: f.code}] : [], null);
+    const row = state.evidence && state.evidence.byCode.get(f.code.toLowerCase());
+    const item = row ? evidenceForCode(f.code) : f.rule ? {status: f.rule.status,name:f.rule.name,why:f.rule.reason,code:f.code} : evidenceForCode(f.code);
+    showAnalysis("e", [item], null);
   }
 
   /* ---------- barcode ---------- */
@@ -163,7 +196,7 @@
       if (!j.found) { state.result = {kind: "message", msg: "notFound", goPhoto: true}; return render(); }
       if (!j.ingredients) { state.result = {kind: "message", msg: "noIngredients", goPhoto: true, read}; return render(); }
       read.text = j.ingredients;
-      showAnalysis("barcode", state.eng.analyse(j.ingredients), read);
+      showAnalysis("barcode", supplementE(j.ingredients, state.eng.analyse(j.ingredients)), read);
     } catch (_) { setStatus("camStatus", L().errNetwork, true); }
   }
 
@@ -229,7 +262,7 @@
       setStatus("photoStatus", "");
       const text = j.ingredients || "";
       $("ingText").value = text;
-      const items = state.eng.analyse(text);
+      const items = supplementE(text, state.eng.analyse(text));
       const have = new Set(items.map(i => state.eng.norm(pick(i.name))));
       /* The AI may add doubts, never a haram verdict: its items are always "doubtful" and marked as suggestions. */
       (j.extra || []).forEach(x => { if (!have.has(state.eng.norm(x.term))) items.push({status: "warn", name: x.term, why: x.reason, ai: true}); });
@@ -284,6 +317,10 @@
       const res = await fetch("/data/rules.json");
       if (!res.ok) throw new Error("rules");
       state.eng = HalalEngine.create(await res.json());
+      try {
+        const evidenceRes = await fetch("/data/evidence-knowledge.json");
+        if (evidenceRes.ok && window.EvidenceCore) state.evidence = EvidenceCore.create(await evidenceRes.json());
+      } catch (e) { console.warn("Evidence catalogue unavailable; quick rules remain usable.", e); }
     } catch (_) { state.result = {kind: "message", msg: "errRules"}; render(); }
   }
   window.addEventListener("pagehide", () => Scanner.stop());
