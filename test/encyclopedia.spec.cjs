@@ -50,3 +50,13 @@ test("quick E-number lookup distinguishes missing evidence from halal", async ({
   await expect(page.locator("#result .verdict h2")).toContainText("Insufficient evidence");
   await expect(page.locator("#result")).toContainText("Not a halal certificate");
 });
+
+test("PWA can reopen the evidence catalogue without a network", async ({page,context}) => {
+  await page.goto("http://127.0.0.1:3000/encyclopedia");
+  await expect(page.locator("#countE")).not.toHaveText("—");
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await context.setOffline(true);
+  await page.reload({waitUntil:"domcontentloaded"});
+  await expect(page.locator("#results .card").first()).toBeVisible();
+  await context.setOffline(false);
+});
