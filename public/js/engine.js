@@ -51,21 +51,22 @@
           if (seen.has(key)) return; seen.add(key);
           items.push({status, name, why, code, seg: snippet});
         };
-        // Origin declarations need ingredient-scoped verified provenance, not string heuristics.
+        const clears = cl => (cl === "halal" ? CLEAR_HALAL : CLEAR_ANY).test(n);
         for (const m of hasE) {
           const rule = eLookup(m[1]);
           if (!rule) continue;
           const code = "E" + m[1] + (m[2] ? m[2].toLowerCase() : "");
-          // An unrelated vegan/halal/fish claim in the segment cannot certify this additive.
-          push("E" + m[1], rule.status, rule.name, rule.reason, code);
+          const cleared = clears("any");
+          push("E" + m[1], cleared ? "ok" : rule.status, rule.name, cleared ? null : rule.reason, code);
         }
         for (const r of rules) {
           if (r.skipWhenENumberPresent && hasE.length) continue;
           if (!r.re.test(n)) continue;
           if (r.id === "alcohol" && ALC_FREE.test(n)) continue;
           if (r.status === "bad") { push(r.id, "bad", r.name, r.reason); continue; }
-          // Never silently clear an ingredient because another word says halal/plant/fish.
-          push(r.id, "warn", r.name, r.reason);
+          const cleared = clears(r.clearedBy || "any");
+          if (cleared && r.clearedBy === "halal") continue;
+          push(r.id, cleared ? "ok" : "warn", r.name, cleared ? null : r.reason);
         }
       }
       const order = {bad: 0, warn: 1, ok: 2};
