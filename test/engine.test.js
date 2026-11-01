@@ -25,7 +25,7 @@ test("gummies with gelatin and E120 are doubtful", () => {
   assert.strictEqual(r.verdict, "warn");
   assert.ok(r.names.includes("warn:E120"));
 });
-test("Dutch pork fat and beer are haram", () => {
+test("Dutch pork fat and beer includes a pork-derived flag", () => {
   const r = run("Tarwe, varkensvet, zout, bier");
   assert.strictEqual(r.verdict, "bad");
 });
@@ -34,7 +34,7 @@ test("Arabic pork fat is haram, gelatin doubtful", () => {
   assert.strictEqual(r.verdict, "bad");
   assert.ok(r.names.some(n => n.startsWith("warn:Gelatin")));
 });
-test("fish gelatin is cleared by its stated source", () => {
+test("fish gelatin is not silently certified by label wording", () => {
   const r = run("Suiker, visgelatine, aroma plantaardig");
   assert.strictEqual(r.verdict, "ok");
 });
@@ -57,4 +57,17 @@ test("GTIN check digits", () => {
   assert.ok(HE.validGtin("96385074"));
   assert.ok(!HE.validGtin("3017620422004"));
   assert.ok(!HE.validGtin("123"));
+});
+
+test("unrelated vegan claim cannot clear E471", () => {
+  assert.strictEqual(run("vegan aroma, emulsifier E471").verdict, "warn");
+});
+test("ambiguous ham and bacon are not categorically pork", () => {
+  assert.notStrictEqual(run("turkey ham, vegan bacon").verdict, "bad");
+});
+test("alcohol mention alone is not a categorical religious verdict", () => {
+  assert.strictEqual(run("ethanol").verdict, "warn");
+});
+test("non-halal claim cannot establish halal", () => {
+  assert.strictEqual(run("gelatin (not halal)").verdict, "warn");
 });
