@@ -1,0 +1,34 @@
+{
+  "name": "Halal Lens — عدسة الحلال",
+  "short_name": "Halal Lens",
+  "description": "Evidence-first food ingredient lookup and barcode/label scanner",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "ar",
+  "dir": "rtl",
+  "theme_color": "#0F6B4F",
+  "background_color": "#f7faf8",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ingredient Encyclopedia",
+      "short_name": "الموسوعة",
+      "url": "/encyclopedia"
+    },
+    {
+      "name": "Scan barcode",
+      "short_name": "باركود",
+      "url": "/"
+    }
+  ]
+}
