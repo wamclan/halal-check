@@ -154,7 +154,7 @@
   }
   function supplementE(text, items) {
     const present = new Set(items.filter(i => i.code).map(i => i.code.toLowerCase()));
-    const re = /(?<![\\p{L}\\p{N}])e[\\s-]*(\\d{3,4})([a-z])?(?:\\s*\\(\\s*(i{1,3}|iv|v)\\s*\\))?(?![\\p{L}\\p{N}])/giu;
+    const re = /(?<![\p{L}\p{N}])e[\s-]*(\d{3,4})([a-z])?(?:\s*\(\s*(i{1,3}|iv|v)\s*\))?(?![\p{L}\p{N}])/giu;
     for (const m of String(text || "").matchAll(re)) {
       const code = "E" + m[1] + (m[2] || "").toLowerCase() + (m[3] ? "(" + m[3].toLowerCase() + ")" : "");
       if (present.has(code.toLowerCase())) continue;
