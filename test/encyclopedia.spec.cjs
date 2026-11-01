@@ -40,3 +40,13 @@ test("main scanner includes an evidence catalogue link", async ({page}) => {
   await page.locator("#eInput").fill("E471");
   await expect(page.locator("#evidenceLookup")).toHaveAttribute("href","/encyclopedia?q=E471");
 });
+
+test("quick E-number lookup distinguishes missing evidence from halal", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='en']").click();
+  await page.locator("#tab-e").click();
+  await page.locator("#eInput").fill("E999");
+  await page.locator("#btnE").click();
+  await expect(page.locator("#result .verdict h2")).toContainText("Insufficient evidence");
+  await expect(page.locator("#result")).toContainText("not a halal certificate");
+});
