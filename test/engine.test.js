@@ -71,3 +71,12 @@ test("alcohol mention alone is not a categorical religious verdict", () => {
 test("non-halal claim cannot establish halal", () => {
   assert.strictEqual(run("gelatin (not halal)").verdict, "warn");
 });
+
+test("pork-free and vegan pork wording is not definitive", () => {
+  assert.notStrictEqual(run("Pork-free sauce, water").verdict, "bad");
+  assert.notStrictEqual(run("vegan pork style flavour").verdict, "bad");
+  assert.notStrictEqual(run("zonder varkensvlees").verdict, "bad");
+});
+test("explicit lard still triggers a source flag", () => {
+  assert.equal(run("water, lard, salt").verdict, "bad");
+});
