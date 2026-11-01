@@ -1,0 +1,32 @@
+name: Evidence catalogue browser QA
+on:
+  push:
+    branches: ["feature/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install browser test runner
+        run: npm install --no-save @playwright/test@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start preview server
+        run: |
+          node scripts/dev-server.js 3000 > /tmp/halal-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/encyclopedia > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/halal-server.log
+          exit 1
+      - name: Run browser tests
+        run: npx playwright test test/encyclopedia.spec.cjs --reporter=line --workers=2
