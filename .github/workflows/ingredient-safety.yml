@@ -1,0 +1,26 @@
+name: Ingredient engine safety tests
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax checks
+        run: |
+          node --check public/js/engine.js
+          node --check public/js/app.js
+          node --check public/js/evidence-core.js
+          node --check public/js/evidence-ui.js
+          node --check api/read-label.js
+      - name: Test engine and server handlers
+        run: npm test

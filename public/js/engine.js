@@ -17,6 +17,8 @@
   const CLEAR_ANY = /(?<![\p{L}\p{N}])(halal|plant|plants|plantaardig|plantaardige|vegetable|vegetal|vegan|vegetarian|vegetarisch|microbial|microbieel|fish|vis|visgelatine|synthetic|synthetisch|حلال|نباتي|نباتيه)(?![\p{L}\p{N}])/iu;
   const CLEAR_HALAL = /(?<![\p{L}\p{N}])(halal|حلال)(?![\p{L}\p{N}])/iu;
   const ALC_FREE = /alcohol[\s-]*(free|vrij|vrije)|non[\s-]*alcoholic|alcoholvrij|zonder alcohol|without alcohol|free from alcohol|خالي من الكحول|بدون كحول|0[.,]0\s*%/;
+  // Negated or simulated pork wording is not evidence of a pork-derived ingredient.
+  const PORK_NEGATED = /\b(?:pork[\s-]*(?:free|less|flavou?red|flavou?r|style|alternative)|(?:no|without|vegan|plant[\s-]*based|meat[\s-]*free|free from)[\s-]+pork|zonder[\s-]+varkens(?:vlees|vet)?|(?:geen[\s-]+varkens(?:vlees|vet)?|varkens(?:vlees|vet)?vrij))\b|(?:خالي\s+من|خال\s+من|بدون|نكهه)\s+(?:لحم\s+)?(?:ال)?خنزير/iu;
 
   function splitTop(text) {
     const out = []; let depth = 0, cur = "";
@@ -51,22 +53,22 @@
           if (seen.has(key)) return; seen.add(key);
           items.push({status, name, why, code, seg: snippet});
         };
-        const clears = cl => (cl === "halal" ? CLEAR_HALAL : CLEAR_ANY).test(n);
+        // Origin declarations need ingredient-scoped verified provenance, not string heuristics.
         for (const m of hasE) {
           const rule = eLookup(m[1]);
           if (!rule) continue;
           const code = "E" + m[1] + (m[2] ? m[2].toLowerCase() : "");
-          const cleared = clears("any");
-          push("E" + m[1], cleared ? "ok" : rule.status, rule.name, cleared ? null : rule.reason, code);
+          // An unrelated vegan/halal/fish claim in the segment cannot certify this additive.
+          push("E" + m[1], rule.status, rule.name, rule.reason, code);
         }
         for (const r of rules) {
           if (r.skipWhenENumberPresent && hasE.length) continue;
           if (!r.re.test(n)) continue;
           if (r.id === "alcohol" && ALC_FREE.test(n)) continue;
+          if (r.id === "pork" && PORK_NEGATED.test(n)) continue;
           if (r.status === "bad") { push(r.id, "bad", r.name, r.reason); continue; }
-          const cleared = clears(r.clearedBy || "any");
-          if (cleared && r.clearedBy === "halal") continue;
-          push(r.id, cleared ? "ok" : "warn", r.name, cleared ? null : r.reason);
+          // Never silently clear an ingredient because another word says halal/plant/fish.
+          push(r.id, "warn", r.name, r.reason);
         }
       }
       const order = {bad: 0, warn: 1, ok: 2};

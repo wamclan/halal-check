@@ -1,11 +1,13 @@
 {
   "name": "halal-check",
-  "version": "0.2.0",
+  "version": "0.3.0-evidence-preview",
   "private": true,
   "description": "Mobile halal ingredient checker (EN/NL/AR): barcode, photo and text.",
   "scripts": {
     "dev": "node scripts/dev-server.js 3000",
-    "test": "node --test test/engine.test.js test/api.test.js"
+    "test": "node --test test/engine.test.js test/api.test.js test/evidence.test.js"
   },
-  "engines": {"node": ">=20"}
+  "engines": {
+    "node": "24.x"
+  }
 }
