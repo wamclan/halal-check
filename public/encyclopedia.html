@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f4e43">
+<meta name="description" content="Halal Lens evidence-based ingredient and E-number catalogue. Source links, regulatory status and transparent uncertainty.">
+<title>Halal Lens | موسوعة المكونات</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/css/evidence.css">
+</head>
+<body>
+<div class="page">
+<header class="top"><a class="brand" href="/"><span class="mark">◈</span> HALAL LENS</a>
+ <nav><a href="/" id="back">مسح الملصقات والباركود</a><label for="language" id="langLabel">اللغة</label><select id="language" aria-label="Language"><option value="ar">العربية</option><option value="nl">Nederlands</option><option value="en">English</option></select></nav></header>
+<main>
+<section class="hero"><span class="eyebrow" id="eyebrow">معلومات موثقة وحدود واضحة</span><h1 id="heading">الموسوعة العملية للمكونات والإضافات الغذائية</h1>
+<p id="lead">ابحث في المكونات وأرقام E، وتحقق من أسباب التنبيه والمراجع. هذه ليست شهادة حلال أو فتوى.</p>
+<div class="stats"><div><b id="countEntries">—</b><small id="sEntries">سجل</small></div><div><b id="countE">—</b><small id="sE">رمز E</small></div><div><b id="countSources">—</b><small id="sSources">مصدر مرجعي</small></div></div>
+</section>
+<section class="notice" id="safety" role="note">لا يعني غياب معلومات الأصل أن المادة حرام، ولا تعني إضافتها إلى قائمة قانونية أنها حلال. يجب التحقق من الشركة والشهادة لكل منتج عند الحاجة.</section>
+<section class="filters" aria-labelledby="searchTitle">
+<h2 id="searchTitle">ابحث في قاعدة المعرفة</h2>
+<div class="fields"><label><span id="qLabel">الاسم أو رقم E</span><input type="search" id="query" autocomplete="off" placeholder="E471 / جيلاتين / glycerol" spellcheck="false"></label>
+<label><span id="kindLabel">الفئة</span><select id="kind"><option value="all">الكل</option><option value="e_additive">إضافات E</option><option value="ingredient_derivative">مشتقات الجيلاتين والكولاجين</option><option value="processing_aid_or_enzyme">الإنزيمات ومساعدات التصنيع</option><option value="ingredient">مكونات أخرى</option></select></label>
+<label><span id="statusLabel">درجة المعلومة</span><select id="status"><option value="all">الكل</option><option value="verify">يحتاج تحققًا</option><option value="unknown">غير محدد</option><option value="haram_indicator">مؤشر خنزيري صريح</option><option value="claim_only">ادعاء غير موثق</option></select></label></div>
+<div class="controls"><p id="resultCount" role="status">جارٍ تحميل البيانات…</p><button type="button" id="export" disabled>تصدير النتائج CSV</button></div>
+</section>
+<section aria-labelledby="resultTitle"><h2 class="sr-only" id="resultTitle">نتائج البحث</h2><div id="results" class="cards"></div><button id="more" type="button" hidden>عرض المزيد</button></section>
+<section class="sources" id="sourcesSection"><h2 id="sourcesTitle">سجل المراجع</h2><p id="sourcesIntro">هذه مصادر عامة وليست شهادات لمنتج محدد. افتح المصدر للتحقق بنفسك.</p><div id="allSources" class="sourcegrid"></div></section>
+</main>
+<footer><p id="footer">مسودة بحثية، بدون اعتماد شرعي أو تحقق من شهادات منتجات بعينها. آخر مراجعة للبيانات: <span id="reviewDate">—</span></p><a href="/legal" id="legal">الشروط والخصوصية</a></footer>
+</div>
+<script src="/js/evidence-core.js" defer></script>
+<script src="/js/evidence-ui.js" defer></script>
+</body></html>
