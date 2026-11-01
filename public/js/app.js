@@ -56,6 +56,14 @@
     if (it.status === "ok") li.append(el("p", null, t.statedOk));
     else if (it.why) li.append(el("p", null, pick(it.why)));
     if (it.ai) li.append(el("p", null, t.aiNote));
+    if (it.code || (it.name && !it.ai)) {
+      const value = it.code || (typeof it.name === "string" ? it.name : it.name.en || "");
+      if (value) {
+        const evidence = el("a", "hint", state.lang === "ar" ? "المراجع وحدود التحقق" : state.lang === "nl" ? "Bronnen en onzekerheid" : "Evidence and uncertainty");
+        evidence.href = "/encyclopedia?q=" + encodeURIComponent(value);
+        li.append(evidence);
+      }
+    }
     if (it.seg && !it.code && !it.ai) { const q = el("p", "snip", "“" + it.seg + "”"); q.dir = "auto"; li.append(q); }
     return li;
   }
@@ -134,6 +142,7 @@
   function runE() {
     if (!ready()) return;
     const f = state.eng.lookupE($("eInput").value);
+    if (f) $("evidenceLookup").href = "/encyclopedia?q=" + encodeURIComponent(f.code);
     if (!f) { state.result = {kind: "message", msg: "eBadFmt"}; return render(); }
     showAnalysis("e", f.rule ? [{status: f.rule.status, name: f.rule.name, why: f.rule.reason, code: f.code}] : [], null);
   }
@@ -266,6 +275,7 @@
     $("btnClear").onclick = () => { $("ingText").value = ""; state.result = null; render(); };
     $("btnE").onclick = runE;
     $("eInput").addEventListener("keydown", e => { if (e.key === "Enter") runE(); });
+    $("eInput").addEventListener("input", e => { $("evidenceLookup").href = "/encyclopedia?q=" + encodeURIComponent(e.target.value.slice(0,80)); });
     $("photoInput").addEventListener("change", e => onFile(e.target.files && e.target.files[0]));
     $("btnPhoto").onclick = readPhoto;
     $("btnStop").onclick = () => state.ctl && state.ctl.abort();
