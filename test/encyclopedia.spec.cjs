@@ -48,5 +48,5 @@ test("quick E-number lookup distinguishes missing evidence from halal", async ({
   await page.locator("#eInput").fill("E999");
   await page.locator("#btnE").click();
   await expect(page.locator("#result .verdict h2")).toContainText("Insufficient evidence");
-  await expect(page.locator("#result")).toContainText("not a halal certificate");
+  await expect(page.locator("#result")).toContainText("Not a halal certificate");
 });
