@@ -36,7 +36,7 @@ test("Arabic pork fat is haram, gelatin doubtful", () => {
 });
 test("fish gelatin is not silently certified by label wording", () => {
   const r = run("Suiker, visgelatine, aroma plantaardig");
-  assert.strictEqual(r.verdict, "ok");
+  assert.strictEqual(r.verdict, "warn");
 });
 test("alcohol free beer extract is not flagged as alcohol", () => {
   assert.strictEqual(run("Water, alcoholvrij bier extract, sugar").verdict, "ok");
