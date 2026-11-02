@@ -369,7 +369,7 @@
     state.lang = I18N[saved] ? saved : I18N[nav] ? nav : "en";
     document.querySelectorAll(".langs button").forEach(b => b.onclick = () => {
       state.lang = b.dataset.lang;
-      try { localStorage.setItem("halal-lang", state.lang); } catch (_) {}
+      try { localStorage.setItem("halal-lang", state.lang); localStorage.setItem("halal-lens-language", state.lang); } catch (_) {}
       applyLang();
     });
     document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
