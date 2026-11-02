@@ -3,7 +3,7 @@ const assert = require("node:assert");
 const http = require("http");
 
 /* Fake Gemini and Open Food Facts servers so the real handlers run end to end without network or keys. */
-let lastGeminiBody = null, lastGeminiPath = null, geminiMode = "ok";
+let lastGeminiBody = null, lastGeminiPath = null, geminiMode = "ok", geminiCalls = 0;
 const fake = http.createServer((req, res) => {
   const chunks = [];
   req.on("data", c => chunks.push(c));
@@ -12,6 +12,9 @@ const fake = http.createServer((req, res) => {
     if (req.url.startsWith("/v1beta/models/")) {
       lastGeminiBody = JSON.parse(Buffer.concat(chunks).toString() || "{}");
       lastGeminiPath = req.url;
+      geminiCalls++;
+      if (geminiMode === "503_once" && geminiCalls === 1) { res.statusCode = 503; return res.end("{}"); }
+      if (geminiMode === "503") { res.statusCode = 503; return res.end("{}"); }
       if (geminiMode === "429") { res.statusCode = 429; return res.end("{}"); }
       if (geminiMode === "404") { res.statusCode = 404; return res.end("{}"); }
       if (geminiMode === "403") { res.statusCode = 403; return res.end("{}"); }
@@ -123,4 +126,46 @@ test("photo reader ignores model-generated halal/source claims and returns trans
     extra: [{term: "Speisefettsäuren",reason:"Verify source."}, {term:"Gelatine",reason:"Invented term."}]});
   assert.equal(result.extra.length, 0);
   assert.match(result.ingredients,/Speisefettsäuren/);
+});
+
+
+test("transient upstream Gemini 503 is retried once then succeeds", async () => {
+  geminiCalls = 0;
+  geminiMode = "503_once";
+  const r = await post({image: img, mime: "image/png"}, {"x-real-ip": "9.9.9.1"});
+  const j = await r.json();
+  assert.strictEqual(r.status,200);
+  assert.strictEqual(j.ok,true);
+  assert.strictEqual(geminiCalls,2);
+  geminiMode = "ok";
+});
+
+test("persistent upstream Gemini 503 returns a readable busy code after only one retry", async () => {
+  geminiCalls = 0;
+  geminiMode = "503";
+  const r = await post({image: img, mime: "image/png"}, {"x-real-ip": "9.9.9.2"});
+  const j = await r.json();
+  assert.strictEqual(r.status,503);
+  assert.strictEqual(j.code,"upstream_busy");
+  assert.strictEqual(geminiCalls,2);
+  geminiMode = "ok";
+});
+
+test("quota-style Gemini 429 is not automatically retried", async () => {
+  geminiCalls = 0;
+  geminiMode = "429";
+  const r = await post({image: img, mime: "image/png"}, {"x-real-ip": "9.9.9.3"});
+  assert.equal(r.status,503);
+  assert.equal((await r.json()).code,"upstream_busy");
+  assert.equal(geminiCalls,1);
+  geminiMode = "ok";
+});
+
+test("nonretryable upstream Gemini 404 does not retry", async () => {
+  geminiCalls=0;
+  geminiMode="404";
+  const r=await post({image: img,mime:"image/jpeg"}, {"x-real-ip":"9.9.9.4"});
+  assert.equal((await r.json()).code,"model_unavailable");
+  assert.equal(geminiCalls,1);
+  geminiMode="ok";
 });
