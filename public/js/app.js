@@ -111,7 +111,7 @@
     const t = L();
     if (!(rd.product || rd.text || rd.halalMark || rd.dbHalal || rd.sourceUrl)) return;
     const d = el("div", "read");
-    const line = (label, val) => { const p = el("div"); p.append(el("b", null, label + ": "), document.createTextNode(val)); d.append(p); };
+    const line = (label, val) => { const p = el("div"); const value = el("span", "source-text", val); value.dir = "auto"; p.append(el("b", null, label + ": "), value); d.append(p); };
     if (rd.product) line(t.product, rd.brand ? rd.product + " (" + rd.brand + ")" : rd.product);
     if (rd.text) line(rd.sourceKind === "off" ? t.readFromDatabase : rd.sourceKind === "photo" ? t.readFromPhoto : t.read, rd.text);
     if (rd.halalMark) d.append(el("div", null, "✓ " + t.halalMark));
@@ -254,6 +254,8 @@
 
   async function readPhoto() {
     if (!state.file || !ready()) return;
+    // A previous barcode result is not a finding from the newly uploaded photo.
+    state.result = null; $("result").hidden = true; $("result").replaceChildren();
     setStatus("photoStatus", L().reading);
     $("btnPhoto").disabled = true; $("btnStop").hidden = false;
     state.ctl = new AbortController();
@@ -282,6 +284,8 @@
     const pv = $("preview");
     if (pv.dataset.url) { try { URL.revokeObjectURL(pv.dataset.url); } catch (_) {} pv.dataset.url = ""; }
     state.file = f || null;
+    // Avoid showing stale results from a different product below this image.
+    if (f) { state.result = null; $("result").hidden = true; $("result").replaceChildren(); }
     if (!f) { pv.hidden = true; $("dropIdle").hidden = false; $("btnPhoto").disabled = true; return; }
     const u = URL.createObjectURL(f); pv.dataset.url = u; pv.src = u; pv.hidden = false; $("dropIdle").hidden = true;
     $("btnPhoto").disabled = false; setStatus("photoStatus", "");
