@@ -9,14 +9,18 @@ const index=JSON.parse(fs.readFileSync(path.join(__dirname,"../public/data/e-num
 test("compact E index matches all source-sensitive E-number records",()=>{
   const expected=db.ingredients.filter(row=>row.kind==="e_additive" && row.code && row.status!=="unknown");
   assert.equal(expected.length,40);
-  assert.equal(index.records.length,expected.length);
+  assert.equal(index.records.length,346);
+  assert.equal(index.records.filter(row=>row.status!=="unknown").length,40);
   const byCode=new Map(expected.map(row=>[row.code,row]));
   for(const item of index.records){
-    const src=byCode.get(item.code);
-    assert.ok(src,"Missing original record "+item.code);
-    assert.equal(item.status,src.status);
-    assert.ok(item.why);
+    assert.ok(item.code && item.en);
     assert.notEqual(item.status,"halal");
+    if(item.status!=="unknown"){
+      const src=byCode.get(item.code);
+      assert.ok(src,"Missing flagged record "+item.code);
+      assert.equal(item.status,src.status);
+      assert.ok(item.why);
+    }
   }
 });
 
