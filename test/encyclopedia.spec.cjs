@@ -259,3 +259,39 @@ test("Enabled Argon is explicitly passed to the photo API and not reused from Fl
   await page.locator("#btnPhoto").click();
   expect(used).toHaveLength(2);
 });
+
+
+test("Argon opt-in without shared counter stays disabled with clear message", async ({page}) => {
+  await page.route("**/api/photo-options",route=>route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,defaultModel:"gemini-3.8-flash",
+      argonEnabled:false,argonPrerequisite:"shared_counter_required",
+      models:[{id:"gemini-3.8-flash",enabled:true},{id:"gemini-4-argon",enabled:false}]})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  await expect(page.locator('#photoModel option[value="gemini-4-argon"]')).toBeDisabled();
+  await expect(page.locator("#photoModelHint")).toContainText("shared rate-limit");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await expect(page.locator("#photoModelHint")).toContainText("عدّاد استخدام مشترك");
+});
+
+test("unavailable premium budget returns clear Arabic guidance without a verdict", async ({page}) => {
+  await page.route("**/api/photo-options",route=>route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,defaultModel:"gemini-3.8-flash",
+      argonEnabled:true,models:[{id:"gemini-3.8-flash",enabled:true},{id:"gemini-4-argon",enabled:true}]})
+  }));
+  await page.route("**/api/read-label",route=>route.fulfill({
+    status:503,contentType:"application/json",
+    body:JSON.stringify({ok:false,code:"premium_limits_unavailable"})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoModel").selectOption("gemini-4-argon");
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("توقفت القراءة المتقدمة مؤقتًا");
+  await expect(page.locator("#result")).toBeHidden();
+});
