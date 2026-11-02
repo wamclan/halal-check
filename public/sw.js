@@ -1,6 +1,6 @@
 /* Halal Lens offline shell — never caches images, API responses, or user-entered text. */
-const CACHE = "halal-lens-evidence-20261101";
-const SHELL = ["/","/encyclopedia","/css/app.css","/css/evidence.css","/js/i18n.js","/js/engine.js","/js/evidence-core.js","/js/evidence-ui.js","/js/app.js","/js/scanner.js","/data/rules.json","/data/evidence-knowledge.json","/favicon.svg","/manifest.webmanifest"];
+const CACHE = "halal-lens-evidence-20261102-perf";
+const SHELL = ["/","/encyclopedia","/css/app.css","/css/evidence.css","/js/i18n.js","/js/engine.js","/js/evidence-core.js","/js/evidence-ui.js","/js/app.js","/js/scanner.js","/js/scan-utils.js","/data/rules.json","/data/e-number-screening.json","/data/evidence-knowledge.json","/favicon.svg","/manifest.webmanifest"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });

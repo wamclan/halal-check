@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = id => document.getElementById(id);
-  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false};
+  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, barcodeCtl: null, lastBarcodeCode: null};
   const L = () => I18N[state.lang];
   const pick = v => (v && typeof v === "object") ? (v[state.lang] || v.en) : v;
   function el(tag, cls, text) {
@@ -37,11 +37,22 @@
 
   function setTab(name) {
     if (name !== "barcode") stopCam();
+    if (name !== state.tab) {
+      if (state.tab === "photo" && state.ctl) cancelPhoto(false);
+      if (state.tab === "barcode" && state.barcodeCtl) {
+        state.barcodeCtl.abort(); state.barcodeCtl = null;
+        $("btnLookup").disabled = false;
+      }
+      // Results from a different product/search must not follow the user to a new tab.
+      state.result = null; $("result").hidden = true; $("result").replaceChildren();
+    }
     state.tab = name;
-    ["barcode", "photo", "text", "e"].forEach(k => {
+    for (const k of ["barcode","photo","text","e"]) {
       $("tab-" + k).setAttribute("aria-selected", String(k === name));
       $("panel-" + k).hidden = k !== name;
-    });
+    }
+    // Keep the result directly below its scanner instead of far below all tabs.
+    $("panel-" + name).append($("result"));
   }
 
   /* ---------- results ---------- */
@@ -185,11 +196,17 @@
     if (!ready()) return;
     const code = String(raw || "").replace(/\D/g, "");
     if (!HalalEngine.validGtin(code)) return setStatus("camStatus", L().badBarcode, true);
+    if (state.barcodeCtl && state.lastBarcodeCode === code) return; // duplicate camera frames
+    if (state.barcodeCtl) state.barcodeCtl.abort();
+    const ctl = new AbortController();
+    state.barcodeCtl = ctl; state.lastBarcodeCode = code;
+    $("btnLookup").disabled = true;
     stopCam();
     setStatus("camStatus", L().looking);
     try {
-      const r = await fetch("/api/product?code=" + (code.length === 12 ? "0" + code : code) + "&lang=" + state.lang);
+      const r = await fetch("/api/product?code=" + (code.length === 12 ? "0" + code : code) + "&lang=" + state.lang,{signal:ctl.signal});
       const j = await r.json().catch(() => ({}));
+      if (state.barcodeCtl !== ctl) return;
       if (!j.ok) return setStatus("camStatus", j.code === "rate_limited" ? L().errRate : L().errGeneric, true);
       setStatus("camStatus", "");
       const read = {product: j.name, brand: j.brand, sourceUrl: j.sourceUrl, dbHalal: !!j.halalLabel};
@@ -198,7 +215,11 @@
       read.text = j.ingredients;
       read.sourceKind = "off";
       showAnalysis("barcode", supplementE(j.ingredients, state.eng.analyse(j.ingredients)), read);
-    } catch (_) { setStatus("camStatus", L().errNetwork, true); }
+    } catch (e) {
+      if (state.barcodeCtl === ctl && e.name !== "AbortError") setStatus("camStatus", L().errNetwork, true);
+    } finally {
+      if (state.barcodeCtl === ctl) {state.barcodeCtl=null;state.lastBarcodeCode=null;$("btnLookup").disabled=false;}
+    }
   }
 
   async function startCam() {
@@ -231,14 +252,16 @@
       w = src.naturalWidth; h = src.naturalHeight; cleanup = () => URL.revokeObjectURL(url);
     }
     let blob = null;
-    for (const [max, q] of [[1600, 0.85], [1400, 0.78], [1100, 0.7]]) {
+    // Small payloads reduce upload time without unnecessarily shrinking label text.
+    for (const [max, q] of [[1600, 0.80], [1500, 0.75], [1400, 0.70]]) {
       const s = Math.min(1, max / Math.max(w, h));
       const c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(h * s);
       c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
       blob = await new Promise(ok => c.toBlob(ok, "image/jpeg", q));
-      if (blob && blob.size <= 2.4e6) break;
+      if (blob && blob.size <= 1.2e6) break;
     }
     cleanup();
+    if (src && typeof src.close === "function") src.close();
     if (!blob) throw new Error("image");
     return new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(",")[1]); fr.onerror = no; fr.readAsDataURL(blob); });
   }
@@ -252,43 +275,91 @@
       unreadable: t.errUnreadable, upstream_busy: t.errBusy, upstream_timeout: t.errBusy}[code] || t.errGeneric;
   }
 
+  // Abort only the active request; changing images/tabs must never render a late result.
+  function cancelPhoto(notify = true) {
+    if (!state.ctl) return;
+    state.photoRunId++;
+    const old = state.ctl;
+    state.ctl = null;
+    old.abort();
+    $("btnPhoto").disabled = !state.file;
+    $("btnStop").hidden = true;
+    if (notify) setStatus("photoStatus", L().photoCancelled);
+    else setStatus("photoStatus", "");
+  }
+  function photoProgress(key) {
+    setStatus("photoStatus", L()[key] || L().reading);
+    $("photoStatus").classList.add("pending");
+  }
   async function readPhoto() {
-    if (!state.file || !ready()) return;
-    // A previous barcode result is not a finding from the newly uploaded photo.
+    if (!state.file || !ready() || state.ctl) return;
+    // Rechecking the SAME selected photo uses the in-memory transcript instead of
+    // paying for another upload and model request. It never persists across reloads.
+    if (state.photoCache && state.photoCache.file === state.file) {
+      state.result = state.photoCache.result;
+      setStatus("photoStatus", L().photoReused);
+      render();
+      return;
+    }
     state.result = null; $("result").hidden = true; $("result").replaceChildren();
-    setStatus("photoStatus", L().reading);
     $("btnPhoto").disabled = true; $("btnStop").hidden = false;
-    state.ctl = new AbortController();
+    const ctl = new AbortController(), id = ++state.photoRunId, selected = state.file;
+    state.ctl = ctl;
+    const live = () => state.ctl === ctl && state.photoRunId === id && !ctl.signal.aborted;
     try {
-      const image = await toJpeg(state.file);
-      const r = await fetch("/api/read-label", {method: "POST", headers: {"Content-Type": "application/json"}, signal: state.ctl.signal,
-        body: JSON.stringify({image, mime: "image/jpeg", lang: state.lang})});
-      const j = await r.json().catch(() => ({ok: false, code: r.status === 413 ? "too_large" : "error"}));
-      if (!j.ok) return setStatus("photoStatus", photoError(j.code), true);
-      setStatus("photoStatus", "");
+      photoProgress("photoPreparing");
+      const image = await toJpeg(selected);
+      if (!live()) return;
+      photoProgress("photoSending");
+      const response = await fetch("/api/read-label",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        signal:ctl.signal,
+        body:JSON.stringify({image,mime:"image/jpeg",lang:state.lang})
+      });
+      if (!live()) return;
+      photoProgress("photoProcessing");
+      const j = await response.json().catch(() => ({ok:false,code:response.status===413?"too_large":"error"}));
+      if (!live()) return;
+      if (!j.ok) {setStatus("photoStatus",photoError(j.code),true);return;}
       const text = j.ingredients || "";
+      if (!text.trim()) {
+        state.result = {kind:"message",msg:"photoNoIngredients"};
+        setStatus("photoStatus", "");
+        render();
+        return;
+      }
       $("ingText").value = text;
-      const items = supplementE(text, state.eng.analyse(text));
-      const have = new Set(items.map(i => state.eng.norm(pick(i.name))));
-      /* The AI may add doubts, never a haram verdict: its items are always "doubtful" and marked as suggestions. */
-      (j.extra || []).forEach(x => { if (!have.has(state.eng.norm(x.term))) items.push({status: "warn", name: x.term, why: x.reason, ai: true}); });
-      if (!text) { state.result = {kind: "message", msg: "photoNoIngredients"}; return render(); }
-      showAnalysis("photo", items, {product: j.product, text, halalMark: j.halalMark, sourceKind: "photo"});
+      const items = HalalScanUtils.mergeSuggestions(
+        supplementE(text,state.eng.analyse(text)),j.extra,text
+      );
+      showAnalysis("photo",items,{product:j.product,text,halalMark:j.halalMark,sourceKind:"photo"});
+      state.photoCache = {file:selected,result:state.result};
+      setStatus("photoStatus",L().photoDone);
     } catch (e) {
-      if (!(e && e.name === "AbortError")) setStatus("photoStatus", e && e.message === "image" ? L().errImg : L().errNetwork, true);
-      else setStatus("photoStatus", "");
-    } finally { $("btnPhoto").disabled = false; $("btnStop").hidden = true; state.ctl = null; }
+      if (live()) setStatus("photoStatus",e && e.message==="image"?L().errImg:L().errNetwork,true);
+    } finally {
+      if (state.ctl === ctl) {
+        state.ctl=null;$("btnPhoto").disabled=!state.file;$("btnStop").hidden=true;
+        $("photoStatus").classList.remove("pending");
+      }
+    }
   }
 
   function onFile(f) {
+    if (state.ctl) cancelPhoto(false);
     const pv = $("preview");
-    if (pv.dataset.url) { try { URL.revokeObjectURL(pv.dataset.url); } catch (_) {} pv.dataset.url = ""; }
-    state.file = f || null;
-    // Avoid showing stale results from a different product below this image.
-    if (f) { state.result = null; $("result").hidden = true; $("result").replaceChildren(); }
-    if (!f) { pv.hidden = true; $("dropIdle").hidden = false; $("btnPhoto").disabled = true; return; }
-    const u = URL.createObjectURL(f); pv.dataset.url = u; pv.src = u; pv.hidden = false; $("dropIdle").hidden = true;
-    $("btnPhoto").disabled = false; setStatus("photoStatus", "");
+    if (pv.dataset.url) {try {URL.revokeObjectURL(pv.dataset.url)}catch(_){}pv.dataset.url="";}
+    if (f !== state.file) state.photoCache=null;
+    state.file=f||null;
+    state.result=null;$("result").hidden=true;$("result").replaceChildren();
+    if (!f) {
+      pv.hidden=true;$("dropIdle").hidden=false;$("btnPhoto").disabled=true;
+      setStatus("photoStatus","");
+      return;
+    }
+    const url=URL.createObjectURL(f);
+    pv.dataset.url=url;pv.src=url;pv.hidden=false;$("dropIdle").hidden=true;
+    $("btnPhoto").disabled=false;setStatus("photoStatus","");
   }
 
   /* ---------- boot ---------- */
@@ -298,7 +369,7 @@
     state.lang = I18N[saved] ? saved : I18N[nav] ? nav : "en";
     document.querySelectorAll(".langs button").forEach(b => b.onclick = () => {
       state.lang = b.dataset.lang;
-      try { localStorage.setItem("halal-lang", state.lang); } catch (_) {}
+      try { localStorage.setItem("halal-lang", state.lang); localStorage.setItem("halal-lens-language", state.lang); } catch (_) {}
       applyLang();
     });
     document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => setTab(b.dataset.tab));
@@ -319,16 +390,21 @@
     $("eInput").addEventListener("input", e => { $("evidenceLookup").href = "/encyclopedia?q=" + encodeURIComponent(e.target.value.slice(0,80)); });
     $("photoInput").addEventListener("change", e => onFile(e.target.files && e.target.files[0]));
     $("btnPhoto").onclick = readPhoto;
-    $("btnStop").onclick = () => state.ctl && state.ctl.abort();
+    $("btnStop").onclick = () => cancelPhoto(true);
     applyLang(); setTab("barcode");
     try {
       const res = await fetch("/data/rules.json");
       if (!res.ok) throw new Error("rules");
       state.eng = HalalEngine.create(await res.json());
+      // This page only needs 346 named E-codes and 40 cautious source flags, not the full
+      // 431-record encyclopedia. The 63KB screening index loads much faster.
       try {
-        const evidenceRes = await fetch("/data/evidence-knowledge.json");
-        if (evidenceRes.ok && window.EvidenceCore) state.evidence = EvidenceCore.create(await evidenceRes.json());
-      } catch (e) { console.warn("Evidence catalogue unavailable; quick rules remain usable.", e); }
+        const evidenceRes = await fetch("/data/e-number-screening.json");
+        if (evidenceRes.ok) {
+          const index = await evidenceRes.json();
+          state.evidence = {byCode:new Map(index.records.map(row=>[row.code.toLowerCase(),row]))};
+        }
+      } catch (e) { console.warn("Quick E-code index unavailable; other rules remain usable."); }
     } catch (_) { state.result = {kind: "message", msg: "errRules"}; render(); }
   }
   window.addEventListener("pagehide", () => Scanner.stop());

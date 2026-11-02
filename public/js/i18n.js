@@ -1,7 +1,7 @@
 window.I18N = {
 en: {
-  dir: "ltr", brand: "Halal Check", title: "Is this product halal?",
-  intro: "Scan the barcode, photograph the ingredient list, paste it, or look up an E-number. You get one of three answers: nothing flagged, doubtful (mushbooh) or haram ingredient found.",
+  dir: "ltr", brand: "Halal Check", title: "Check food ingredients",
+  intro: "Scan a barcode, photograph ingredients, paste a label, or search an E number. We highlight what requires checking and what remains unknown; no automatic halal certification.",
   tabBarcode: "Barcode", tabPhoto: "Photo", tabText: "List", tabE: "E-number",
   barcodeHint: "Point the camera at the barcode on the pack. The product is looked up in Open Food Facts.",
   startCam: "Start camera", stopCam: "Stop camera", camStarting: "Starting camera…",
@@ -18,7 +18,7 @@ en: {
   openOff: "Open product page", halalLabelDb: "The database lists a halal label. This has not been verified here.",
   photoHint: "Photograph the ingredient list CLOSE UP so the words fill the frame (German, Danish and other languages are accepted). The image is sent to Gemini for transcription and is not stored by this app.",
   dropTitle: "Take or choose a photo", dropSub: "Ingredient list on the pack",
-  analyse: "Read and check", stop: "Stop", reading: "Reading the label…",
+  analyse: "Read and check", stop: "Stop", reading: "Reading the label…", photoPreparing: "Preparing the image on your device…", photoSending: "Securely sending the image for reading…", photoProcessing: "Organizing extracted ingredients…", photoCancelled: "Reading cancelled. Choose a photo to try again.", photoReused: "Using the ingredient list already read from this photo (no new upload).", photoDone: "Image processed. Review the original ingredient text below.",
   textHint: "Paste or type the ingredient list (English, Dutch or Arabic). Nothing is sent anywhere.",
   check: "Check ingredients", clear: "Clear", exTitle: "Examples",
   eHint: "Type an E-number, for example E471 or E120.", checkE: "Look up",
@@ -62,8 +62,8 @@ en: {
   footLegal: "About, terms and privacy"
 },
 nl: {
-  dir: "ltr", brand: "Halal Check", title: "Is dit product halal?",
-  intro: "Scan de barcode, maak een foto van de ingrediëntenlijst, plak de lijst of zoek een E-nummer op. Je krijgt één van drie antwoorden: niets gemarkeerd, twijfelachtig (mushbooh) of haram ingrediënt gevonden.",
+  dir: "ltr", brand: "Halal Check", title: "Controleer ingrediënten",
+  intro: "Scan een barcode, fotografeer ingrediënten, plak een lijst of zoek een E-nummer op. Je ziet wat gecontroleerd moet worden en wat onbekend blijft; geen automatische halalcertificering.",
   tabBarcode: "Barcode", tabPhoto: "Foto", tabText: "Lijst", tabE: "E-nummer",
   barcodeHint: "Richt de camera op de barcode op de verpakking. Het product wordt opgezocht in Open Food Facts.",
   startCam: "Camera starten", stopCam: "Camera stoppen", camStarting: "Camera wordt gestart…",
@@ -80,7 +80,7 @@ nl: {
   openOff: "Open productpagina", halalLabelDb: "De database vermeldt een halallabel. Dit is hier niet gecontroleerd.",
   photoHint: "Fotografeer de ingrediëntenlijst van DICHTBIJ en zorg dat de tekst groot en scherp is. Ook Duitse en Deense teksten zijn welkom. De foto wordt door Gemini uitgelezen en niet opgeslagen door deze app.",
   dropTitle: "Maak of kies een foto", dropSub: "Ingrediëntenlijst op de verpakking",
-  analyse: "Lezen en controleren", stop: "Stop", reading: "Etiket wordt gelezen…",
+  analyse: "Lezen en controleren", stop: "Stop", reading: "Etiket wordt gelezen…", photoPreparing: "Foto wordt op je apparaat voorbereid…", photoSending: "Foto wordt veilig verzonden om te lezen…", photoProcessing: "Uitgelezen ingrediënten worden geordend…", photoCancelled: "Lezen geannuleerd. Kies een foto om opnieuw te proberen.", photoReused: "Eerder uitgelezen ingrediënten hergebruikt (geen nieuwe upload).", photoDone: "Foto verwerkt. Controleer de uitgelezen ingrediënten hieronder.",
   textHint: "Plak of typ de ingrediëntenlijst (Engels, Nederlands of Arabisch). Er wordt niets verstuurd.",
   check: "Controleer ingrediënten", clear: "Wissen", exTitle: "Voorbeelden",
   eHint: "Typ een E-nummer, bijvoorbeeld E471 of E120.", checkE: "Opzoeken",
@@ -124,8 +124,8 @@ nl: {
   footLegal: "Over, voorwaarden en privacy"
 },
 ar: {
-  dir: "rtl", brand: "فحص الحلال", title: "هل هذا المنتج حلال؟",
-  intro: "امسح الباركود أو صوّر قائمة المكونات أو الصقها أو ابحث عن رقم E. ستحصل على إحدى ثلاث نتائج: لا شيء مُعلَّم، أو مشبوه، أو يحتوي على مكوّن حرام.",
+  dir: "rtl", brand: "فحص الحلال", title: "افحص مكونات المنتج",
+  intro: "امسح الباركود أو صوّر المكونات أو الصق القائمة أو ابحث برقم E. نوضح ما يحتاج إلى تحقق وما لا نعرفه؛ ولا نصدر شهادة حلال تلقائية.",
   tabBarcode: "باركود", tabPhoto: "صورة", tabText: "قائمة", tabE: "رقم E",
   barcodeHint: "وجّه الكاميرا إلى الباركود على العبوة. يُبحث عن المنتج في Open Food Facts.",
   startCam: "تشغيل الكاميرا", stopCam: "إيقاف الكاميرا", camStarting: "جارٍ تشغيل الكاميرا…",
@@ -142,7 +142,7 @@ ar: {
   openOff: "فتح صفحة المنتج", halalLabelDb: "تذكر قاعدة البيانات علامة حلال. لم يتم التحقق منها هنا.",
   photoHint: "صوّر قائمة المكونات عن قرب بحيث تملأ الكلمات مساحة الصورة وتكون واضحة. ندعم قراءة الملصقات الألمانية والدنماركية وغيرها. تُرسل الصورة إلى Gemini لاستخراج النص ولا يحتفظ التطبيق بها.",
   dropTitle: "التقط صورة أو اخترها", dropSub: "قائمة المكونات على العبوة",
-  analyse: "قراءة وفحص", stop: "إيقاف", reading: "جارٍ قراءة الملصق…",
+  analyse: "قراءة وفحص", stop: "إيقاف", reading: "جارٍ قراءة الملصق…", photoPreparing: "جارٍ تجهيز الصورة على جهازك…", photoSending: "جارٍ إرسال الصورة واستخراج مكوناتها…", photoProcessing: "جارٍ تنظيم المكونات المستخرجة…", photoCancelled: "أُلغيت القراءة. يمكنك اختيار صورة والمحاولة مجددًا.", photoReused: "أُعيد استخدام نص الصورة نفسها دون إرسال طلب جديد.", photoDone: "اكتملت قراءة الصورة؛ طابق المكونات الظاهرة مع العبوة.",
   textHint: "الصق قائمة المكونات أو اكتبها (بالإنجليزية أو الهولندية أو العربية). لا يُرسل أي شيء.",
   check: "افحص المكونات", clear: "مسح", exTitle: "أمثلة",
   eHint: "اكتب رقم E مثل E471 أو E120.", checkE: "بحث",
