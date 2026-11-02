@@ -252,14 +252,16 @@
       w = src.naturalWidth; h = src.naturalHeight; cleanup = () => URL.revokeObjectURL(url);
     }
     let blob = null;
-    for (const [max, q] of [[1600, 0.85], [1400, 0.78], [1100, 0.7]]) {
+    // Small payloads reduce upload time without unnecessarily shrinking label text.
+    for (const [max, q] of [[1600, 0.80], [1500, 0.75], [1400, 0.70]]) {
       const s = Math.min(1, max / Math.max(w, h));
       const c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(h * s);
       c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
       blob = await new Promise(ok => c.toBlob(ok, "image/jpeg", q));
-      if (blob && blob.size <= 2.4e6) break;
+      if (blob && blob.size <= 1.2e6) break;
     }
     cleanup();
+    if (src && typeof src.close === "function") src.close();
     if (!blob) throw new Error("image");
     return new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(",")[1]); fr.onerror = no; fr.readAsDataURL(blob); });
   }
@@ -338,8 +340,8 @@
     } finally {
       if (state.ctl === ctl) {
         state.ctl=null;$("btnPhoto").disabled=!state.file;$("btnStop").hidden=true;
+        $("photoStatus").classList.remove("pending");
       }
-      $("photoStatus").classList.remove("pending");
     }
   }
 
