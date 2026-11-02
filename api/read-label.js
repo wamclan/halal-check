@@ -4,6 +4,7 @@
    The photo is processed in memory only. Nothing is stored and the image is never logged. */
 const {send, clientIp, sameSite, readJson, clean, fetchTimeout} = require("./_lib/util");
 const {bump} = require("./_lib/limit");
+const {ARGON, resolveModel} = require("./_lib/models");
 
 const LANG_NAME = {en: "English", nl: "Dutch", ar: "Arabic"};
 const MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -62,6 +63,14 @@ module.exports = async function handler(req, res) {
   if (!image || !MIMES.has(mime) || !/^[A-Za-z0-9+/]+={0,2}$/.test(image)) return send(res, 400, {ok: false, code: "bad_image"});
   if (image.length > MAX_B64) return send(res, 413, {ok: false, code: "too_large"});
 
+  // Public clients cannot choose arbitrary model names, and premium Argon
+  // requires an operator flag. Reject before consuming any Gemini quota.
+  const choice = resolveModel(body.model);
+  if (choice.code) {
+    return send(res, choice.code === "model_not_enabled" ? 403 : 400, {ok: false, code: choice.code});
+  }
+  const model = choice.model;
+
   const perHour = Number(process.env.RATE_PER_HOUR || 12);
   const dailyCap = Number(process.env.DAILY_CAP || 400);
   const day = new Date().toISOString().slice(0, 10);
@@ -70,10 +79,16 @@ module.exports = async function handler(req, res) {
   const all = await bump("cap:photo:" + day, 90000);
   if (all > dailyCap) return send(res, 429, {ok: false, code: "daily_cap"});
 
-  // Gemini 3.8 Flash is a stable vision-capable model. Keep the exact model ID configurable.
-  // A 404 can mean a model ID is unavailable for this API key or endpoint.
-  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  if (!/^[a-zA-Z0-9._-]{2,90}$/.test(model)) return send(res, 503, {ok: false, code: "invalid_model_config"});
+  // Resolve model after server-side allowlist and operator authorization.
+  if (model === ARGON) {
+    // This additional, separate cap limits unintended premium usage on public
+    // sites even when Argon has been enabled by the operator.
+    const perHourArgon = await bump("rl:argon:" + clientIp(req), 3600);
+    if (perHourArgon > 2) return send(res, 429, {ok:false, code:"rate_limited"}, {"Retry-After":"3600"});
+    const argonDay = await bump("cap:argon:" + day, 90000);
+    if (argonDay > 12) return send(res, 429, {ok:false,code:"daily_cap"});
+  }
+
   const base = (process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
   const url = base + "/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
 
@@ -134,7 +149,7 @@ module.exports = async function handler(req, res) {
   const text = Array.isArray(parts) ? parts.map(p => p.text || "").join("") : "";
   const parsed = parseModelJson(text);
   if (!parsed) return send(res, 502, {ok: false, code: "unreadable"});
-  return send(res, 200, Object.assign({ok: true}, sanitize(parsed)));
+  return send(res, 200, Object.assign({ok: true, model}, sanitize(parsed)));
 };
 
 module.exports._test = {parseModelJson, sanitize};
