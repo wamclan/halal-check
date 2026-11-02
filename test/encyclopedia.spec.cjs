@@ -206,3 +206,18 @@ test("photo results show two priorities and hide the rest until requested", asyn
   await page.locator(".raw-ingredients summary").click();
   await expect(page.locator(".raw-ingredients .source-text")).toContainText("Zutaten:");
 });
+
+
+test("temporary Gemini 503 is shown in Arabic without a false halal finding", async ({page}) => {
+  await page.route("**/api/read-label", route => route.fulfill({
+    status:503, contentType:"application/json",
+    body:JSON.stringify({ok:false,code:"upstream_busy"})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("خدمة Gemini غير متاحة مؤقتًا");
+  await expect(page.locator("#result")).toBeHidden();
+});
