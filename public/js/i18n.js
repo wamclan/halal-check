@@ -1,7 +1,7 @@
 window.I18N = {
 en: {
-  dir: "ltr", brand: "Halal Check", title: "Is this product halal?",
-  intro: "Scan the barcode, photograph the ingredient list, paste it, or look up an E-number. You get one of three answers: nothing flagged, doubtful (mushbooh) or haram ingredient found.",
+  dir: "ltr", brand: "Halal Check", title: "Check food ingredients",
+  intro: "Scan a barcode, photograph ingredients, paste a label, or search an E number. We highlight what requires checking and what remains unknown; no automatic halal certification.",
   tabBarcode: "Barcode", tabPhoto: "Photo", tabText: "List", tabE: "E-number",
   barcodeHint: "Point the camera at the barcode on the pack. The product is looked up in Open Food Facts.",
   startCam: "Start camera", stopCam: "Stop camera", camStarting: "Starting camera…",
@@ -62,8 +62,8 @@ en: {
   footLegal: "About, terms and privacy"
 },
 nl: {
-  dir: "ltr", brand: "Halal Check", title: "Is dit product halal?",
-  intro: "Scan de barcode, maak een foto van de ingrediëntenlijst, plak de lijst of zoek een E-nummer op. Je krijgt één van drie antwoorden: niets gemarkeerd, twijfelachtig (mushbooh) of haram ingrediënt gevonden.",
+  dir: "ltr", brand: "Halal Check", title: "Controleer ingrediënten",
+  intro: "Scan een barcode, fotografeer ingrediënten, plak een lijst of zoek een E-nummer op. Je ziet wat gecontroleerd moet worden en wat onbekend blijft; geen automatische halalcertificering.",
   tabBarcode: "Barcode", tabPhoto: "Foto", tabText: "Lijst", tabE: "E-nummer",
   barcodeHint: "Richt de camera op de barcode op de verpakking. Het product wordt opgezocht in Open Food Facts.",
   startCam: "Camera starten", stopCam: "Camera stoppen", camStarting: "Camera wordt gestart…",
@@ -124,8 +124,8 @@ nl: {
   footLegal: "Over, voorwaarden en privacy"
 },
 ar: {
-  dir: "rtl", brand: "فحص الحلال", title: "هل هذا المنتج حلال؟",
-  intro: "امسح الباركود أو صوّر قائمة المكونات أو الصقها أو ابحث عن رقم E. ستحصل على إحدى ثلاث نتائج: لا شيء مُعلَّم، أو مشبوه، أو يحتوي على مكوّن حرام.",
+  dir: "rtl", brand: "فحص الحلال", title: "افحص مكونات المنتج",
+  intro: "امسح الباركود أو صوّر المكونات أو الصق القائمة أو ابحث برقم E. نوضح ما يحتاج إلى تحقق وما لا نعرفه؛ ولا نصدر شهادة حلال تلقائية.",
   tabBarcode: "باركود", tabPhoto: "صورة", tabText: "قائمة", tabE: "رقم E",
   barcodeHint: "وجّه الكاميرا إلى الباركود على العبوة. يُبحث عن المنتج في Open Food Facts.",
   startCam: "تشغيل الكاميرا", stopCam: "إيقاف الكاميرا", camStarting: "جارٍ تشغيل الكاميرا…",
