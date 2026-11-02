@@ -81,32 +81,50 @@ module.exports = async function handler(req, res) {
   // 3.8 Flash supports low thinking; 2.5-series models do not accept thinkingLevel.
   // The operator can change GEMINI_MODEL without silently forcing incompatible config.
   if (/^gemini-(?:3|4)(?:[.-])/.test(model)) generationConfig.thinkingConfig = {thinkingLevel: "low"};
-  let r;
+  // Hard limit the full request sequence: failed attempts must not leave
+  // a mobile user waiting through multiple 40-second model calls.
+  // A 503 is temporary Google-side overload; a single capped retry is useful.
+  // 429 can be a billing/quota issue, so do not automatically retry it.
+  const request = {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "x-goog-api-key": key},
+    body: JSON.stringify({
+      contents: [{role: "user", parts: [{text: prompt(lang)}, {inline_data: {mime_type: mime, data: image}}]}],
+      generationConfig
+    })
+  };
   const startedAt = Date.now();
-  try {
-    r = await fetchTimeout(url, {
-      method: "POST",
-      headers: {"Content-Type": "application/json", "x-goog-api-key": key},
-      body: JSON.stringify({
-        contents: [{role: "user", parts: [{text: prompt(lang)}, {inline_data: {mime_type: mime, data: image}}]}],
-        generationConfig
-      })
-    }, 40000);
-  } catch (e) {
-    return send(res, 504, {ok: false, code: "upstream_timeout"});
+  let r, attempts = 0, timedOut = false;
+  const maxTotalMs = 39000;
+  for (;;) {
+    attempts++;
+    const remaining = maxTotalMs - (Date.now() - startedAt);
+    if (remaining < 1500) {timedOut = true;break;}
+    try {
+      r = await fetchTimeout(url, request, Math.min(remaining, attempts === 1 ? 27000 : 10000));
+    } catch (_) {
+      timedOut = true; break; // Never retry unknown network failures or timeouts.
+    }
+    if (r.status !== 503 || attempts >= 2) break;
+    // Google recommends a short backoff for 503 UNAVAILABLE.
+    // Retrying the same model once preserves user-selected model and cost policy.
+    const delay = 900 + Math.floor(Math.random() * 201);
+    if (Date.now() - startedAt + delay + 1500 >= maxTotalMs) break;
+    await new Promise(resolve => setTimeout(resolve, delay));
   }
-
-  // Timing is diagnostic only; never record image content, labels or API keys.
-  console.info("gemini vision response", r.status, "durationMs", Date.now()-startedAt);
+  // Logs contain only status, attempts and elapsed time. No image, key or
+  // ingredient transcription is logged.
+  console.info("gemini vision response", r ? r.status : "timeout",
+    "attempts", attempts, "durationMs", Date.now() - startedAt);
+  if (timedOut || !r) return send(res, 504, {ok: false, code: "upstream_timeout"});
   if (!r.ok) {
-    // Log only the HTTP status: never log secrets, image bytes, or Gemini's response body.
     console.error("gemini status", r.status);
     const code = r.status === 404 ? "model_unavailable"
       : (r.status === 401 || r.status === 403) ? "api_auth_error"
-      : r.status === 429 ? "upstream_busy"
+      : (r.status === 503 || r.status === 429) ? "upstream_busy"
       : r.status === 400 ? "upstream_invalid_request"
       : "upstream_error";
-    return send(res, r.status === 429 ? 503 : 502, {ok: false, code});
+    return send(res, (r.status === 503 || r.status === 429) ? 503 : 502, {ok: false, code});
   }
 
   let j;
