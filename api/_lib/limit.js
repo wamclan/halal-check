@@ -53,7 +53,9 @@ async function bumpStrict(key, windowSec) {
   let j;
   try { j = await r.json(); } catch (_) { throw new Error("shared_counter_unavailable"); }
   const n = Array.isArray(j) && j[0] && Number(j[0].result);
-  if (!Number.isSafeInteger(n) || n < 1 || (j[1] && j[1].error) || j[0].error)
+  const expiry = Array.isArray(j) && j[1] && Number(j[1].result);
+  if (!Array.isArray(j) || j.length !== 2 || !Number.isSafeInteger(n) || n < 1 ||
+      (expiry !== 0 && expiry !== 1) || j[0].error || j[1].error)
     throw new Error("shared_counter_unavailable");
   return n;
 }
