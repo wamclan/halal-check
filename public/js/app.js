@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = id => document.getElementById(id);
-  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false};
+  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, barcodeCtl: null, lastBarcodeCode: null};
   const L = () => I18N[state.lang];
   const pick = v => (v && typeof v === "object") ? (v[state.lang] || v.en) : v;
   function el(tag, cls, text) {
@@ -37,11 +37,22 @@
 
   function setTab(name) {
     if (name !== "barcode") stopCam();
+    if (name !== state.tab) {
+      if (state.tab === "photo" && state.ctl) cancelPhoto(false);
+      if (state.tab === "barcode" && state.barcodeCtl) {
+        state.barcodeCtl.abort(); state.barcodeCtl = null;
+        $("btnLookup").disabled = false;
+      }
+      // Results from a different product/search must not follow the user to a new tab.
+      state.result = null; $("result").hidden = true; $("result").replaceChildren();
+    }
     state.tab = name;
-    ["barcode", "photo", "text", "e"].forEach(k => {
+    for (const k of ["barcode","photo","text","e"]) {
       $("tab-" + k).setAttribute("aria-selected", String(k === name));
       $("panel-" + k).hidden = k !== name;
-    });
+    }
+    // Keep the result directly below its scanner instead of far below all tabs.
+    $("panel-" + name).append($("result"));
   }
 
   /* ---------- results ---------- */
@@ -185,11 +196,17 @@
     if (!ready()) return;
     const code = String(raw || "").replace(/\D/g, "");
     if (!HalalEngine.validGtin(code)) return setStatus("camStatus", L().badBarcode, true);
+    if (state.barcodeCtl && state.lastBarcodeCode === code) return; // duplicate camera frames
+    if (state.barcodeCtl) state.barcodeCtl.abort();
+    const ctl = new AbortController();
+    state.barcodeCtl = ctl; state.lastBarcodeCode = code;
+    $("btnLookup").disabled = true;
     stopCam();
     setStatus("camStatus", L().looking);
     try {
-      const r = await fetch("/api/product?code=" + (code.length === 12 ? "0" + code : code) + "&lang=" + state.lang);
+      const r = await fetch("/api/product?code=" + (code.length === 12 ? "0" + code : code) + "&lang=" + state.lang,{signal:ctl.signal});
       const j = await r.json().catch(() => ({}));
+      if (state.barcodeCtl !== ctl) return;
       if (!j.ok) return setStatus("camStatus", j.code === "rate_limited" ? L().errRate : L().errGeneric, true);
       setStatus("camStatus", "");
       const read = {product: j.name, brand: j.brand, sourceUrl: j.sourceUrl, dbHalal: !!j.halalLabel};
@@ -198,7 +215,11 @@
       read.text = j.ingredients;
       read.sourceKind = "off";
       showAnalysis("barcode", supplementE(j.ingredients, state.eng.analyse(j.ingredients)), read);
-    } catch (_) { setStatus("camStatus", L().errNetwork, true); }
+    } catch (e) {
+      if (state.barcodeCtl === ctl && e.name !== "AbortError") setStatus("camStatus", L().errNetwork, true);
+    } finally {
+      if (state.barcodeCtl === ctl) {state.barcodeCtl=null;state.lastBarcodeCode=null;$("btnLookup").disabled=false;}
+    }
   }
 
   async function startCam() {
