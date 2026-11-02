@@ -19,6 +19,7 @@ jobs:
         run: |
           node --check public/js/engine.js
           node --check public/js/app.js
+          node --check public/js/i18n.js
           node --check public/js/scan-utils.js
           node --check public/js/evidence-core.js
           node --check public/js/evidence-ui.js
