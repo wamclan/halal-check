@@ -101,3 +101,28 @@ test("Gemini model 404 offers an actionable error and manual entry", async ({pag
   await page.locator("#btnPhotoManual").click();
   await expect(page.locator("#panel-text")).toBeVisible();
 });
+
+test("changing scan method clears a previous product verdict", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-text").click();
+  await page.locator("#ingText").fill("gelatin");
+  await page.locator("#btnText").click();
+  await expect(page.locator("#result")).toBeVisible();
+  await page.locator("#tab-photo").click();
+  await expect(page.locator("#result")).toBeHidden();
+});
+test("photo transcription detects German language independently of English UI", async ({page}) => {
+  await page.route("**/api/read-label", route => route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,product:"Magnesium Supplement",ingredients:"Zutaten: Trennmittel Magnesiumsalze der Speisefettsäuren, Vitamin B12",language:"de",complete:true,halalMark:false,extra:[]})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  const tiny = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/eFUAAAAASUVORK5CYII=", "base64");
+  await page.locator("#photoInput").setInputFiles({name:"ingredients.png",mimeType:"image/png",buffer:tiny});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#result .verdict.warn")).toBeVisible();
+  await expect(page.locator("#result")).toContainText("German");
+  await expect(page.locator("#result")).toContainText("Ingredients transcribed from the photo");
+  await expect(page.locator("#result")).toContainText("Speisefettsäuren");
+});
