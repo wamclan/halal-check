@@ -172,3 +172,14 @@ test("photo button has a visible processing phase and prevents duplicate request
   await expect(page.locator("#panel-photo #result")).toBeVisible();
   expect(called).toBe(1);
 });
+
+test("Arabic scanner language carries into the evidence encyclopedia", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#evidenceNav").click();
+  await expect(page.locator("html")).toHaveAttribute("lang","ar");
+  await expect(page.locator("html")).toHaveAttribute("dir","rtl");
+  await page.locator("#language").selectOption("nl");
+  await page.goto("http://127.0.0.1:3000/");
+  await expect(page.locator(".langs button[data-lang='nl']")).toHaveAttribute("aria-pressed","true");
+});
