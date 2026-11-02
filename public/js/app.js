@@ -37,6 +37,7 @@
   }
 
   function setTab(name) {
+    if (name !== state.tab) { state.result = null; render(); }
     if (name !== "barcode") stopCam();
     state.tab = name;
     ["barcode", "photo", "text", "e"].forEach(k => {
@@ -195,6 +196,7 @@
     const code = String(raw || "").replace(/\D/g, "");
     if (!HalalEngine.validGtin(code)) return setStatus("camStatus", L().badBarcode, true);
     stopCam();
+    state.result = null; render();
     setStatus("camStatus", L().looking);
     try {
       const r = await fetch("/api/product?code=" + (code.length === 12 ? "0" + code : code) + "&lang=" + state.lang);
@@ -262,6 +264,7 @@
 
   async function readPhoto() {
     if (!state.file || !ready()) return;
+    state.result = null; render();
     setStatus("photoStatus", L().reading);
     $("btnPhotoManual").hidden = true;
     $("btnPhoto").disabled = true; $("btnStop").hidden = false;
@@ -295,6 +298,7 @@
     const pv = $("preview");
     if (pv.dataset.url) { try { URL.revokeObjectURL(pv.dataset.url); } catch (_) {} pv.dataset.url = ""; }
     state.file = f || null;
+    if (state.result) { state.result = null; render(); }
     if (!f) { pv.hidden = true; $("dropIdle").hidden = false; $("btnPhoto").disabled = true; return; }
     const u = URL.createObjectURL(f); pv.dataset.url = u; pv.src = u; pv.hidden = false; $("dropIdle").hidden = true;
     $("btnPhoto").disabled = false; $("btnPhotoManual").hidden = true; setStatus("photoStatus", "");
