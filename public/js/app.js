@@ -396,8 +396,8 @@
       const res = await fetch("/data/rules.json");
       if (!res.ok) throw new Error("rules");
       state.eng = HalalEngine.create(await res.json());
-      // This page only needs 40 source-sensitive E-code flags, not the full
-      // 431-record encyclopedia. The 22KB screening index loads much faster.
+      // This page only needs 346 named E-codes and 40 cautious source flags, not the full
+      // 431-record encyclopedia. The 63KB screening index loads much faster.
       try {
         const evidenceRes = await fetch("/data/e-number-screening.json");
         if (evidenceRes.ok) {
