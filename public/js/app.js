@@ -429,18 +429,16 @@
     $("btnPhoto").onclick = readPhoto;
     $("btnStop").onclick = () => cancelPhoto(true);
     applyLang(); setTab("barcode");
-    // Model availability is fetched from our own server, never from the Google key.
-    // Argon remains disabled unless explicitly enabled in deployment settings.
-    try {
-      const response = await fetch("/api/photo-options");
-      if (response.ok) {
-        const options = await response.json();
-        state.argonEnabled = options.argonEnabled === true;
-        $("photoModel").querySelector('option[value="gemini-4-argon"]').disabled = !state.argonEnabled;
-        if (options.defaultModel === "gemini-4-argon" && state.argonEnabled) $("photoModel").value = "gemini-4-argon";
-      }
-    } catch (_) {}
-    applyLang();
+    // Read model options asynchronously, without delaying the ingredient rules
+    // or the barcode scanner on slow networks.
+    fetch("/api/photo-options").then(async response => {
+      if (!response.ok) return;
+      const options = await response.json();
+      state.argonEnabled = options.argonEnabled === true;
+      $("photoModel").querySelector('option[value="gemini-4-argon"]').disabled = !state.argonEnabled;
+      if (options.defaultModel === "gemini-4-argon" && state.argonEnabled) $("photoModel").value = "gemini-4-argon";
+      applyLang();
+    }).catch(() => { /* Flash continues working if options are unavailable. */ });
 
     try {
       const res = await fetch("/data/rules.json");
