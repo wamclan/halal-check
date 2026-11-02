@@ -56,11 +56,15 @@ test("read-label returns sanitized ingredients and forwards the image", async ()
   assert.strictEqual(j.product, "Koekjes");
   assert.ok(!j.ingredients.includes("\u0000"));
   assert.strictEqual(j.halalMark, true);
-  assert.strictEqual(j.extra.length, 1);
+  assert.strictEqual(j.extra.length, 0);
   const parts = lastGeminiBody.contents[0].parts;
   assert.strictEqual(parts[1].inline_data.data, img);
   assert.ok(parts[0].text.includes("Dutch"));
-  assert.ok(parts[0].text.includes("German"));
+  assert.ok(parts[0].text.includes("Zutaten"));
+  assert.ok(parts[0].text.includes("DO NOT translate") || parts[0].text.includes("DO NOT"));
+  assert.equal(lastGeminiBody.generationConfig.thinkingConfig.thinkingLevel, "low");
+  assert.equal(lastGeminiBody.generationConfig.responseMimeType, "application/json");
+  assert.ok(!("temperature" in lastGeminiBody.generationConfig));
   assert.ok(lastGeminiPath.includes("/models/gemini-3.8-flash:generateContent"));
 });
 test("read-label rejects bad input", async () => {
@@ -113,10 +117,10 @@ test("photo reader differentiates unavailable model and failed auth", async () =
   assert.strictEqual((await (await request("8.8.8.3")).json()).code, "upstream_invalid_request");
   geminiMode = "ok";
 });
-test("photo reader filters AI suggestions that do not occur in the transcription", () => {
+test("photo reader ignores model-generated halal/source claims and returns transcription only", () => {
   const {sanitize} = require("../api/read-label")._test;
   const result = sanitize({ingredients_text: "Magnesiumsalze der Speisefettsäuren, Vitamin B12",
     extra: [{term: "Speisefettsäuren",reason:"Verify source."}, {term:"Gelatine",reason:"Invented term."}]});
-  assert.equal(result.extra.length, 1);
-  assert.equal(result.extra[0].term,"Speisefettsäuren");
+  assert.equal(result.extra.length, 0);
+  assert.match(result.ingredients,/Speisefettsäuren/);
 });
