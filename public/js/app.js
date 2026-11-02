@@ -273,43 +273,91 @@
       unreadable: t.errUnreadable, upstream_busy: t.errBusy, upstream_timeout: t.errBusy}[code] || t.errGeneric;
   }
 
+  // Abort only the active request; changing images/tabs must never render a late result.
+  function cancelPhoto(notify = true) {
+    if (!state.ctl) return;
+    state.photoRunId++;
+    const old = state.ctl;
+    state.ctl = null;
+    old.abort();
+    $("btnPhoto").disabled = !state.file;
+    $("btnStop").hidden = true;
+    if (notify) setStatus("photoStatus", L().photoCancelled);
+    else setStatus("photoStatus", "");
+  }
+  function photoProgress(key) {
+    setStatus("photoStatus", L()[key] || L().reading);
+    $("photoStatus").classList.add("pending");
+  }
   async function readPhoto() {
-    if (!state.file || !ready()) return;
-    // A previous barcode result is not a finding from the newly uploaded photo.
+    if (!state.file || !ready() || state.ctl) return;
+    // Rechecking the SAME selected photo uses the in-memory transcript instead of
+    // paying for another upload and model request. It never persists across reloads.
+    if (state.photoCache && state.photoCache.file === state.file) {
+      state.result = state.photoCache.result;
+      setStatus("photoStatus", L().photoReused);
+      render();
+      return;
+    }
     state.result = null; $("result").hidden = true; $("result").replaceChildren();
-    setStatus("photoStatus", L().reading);
     $("btnPhoto").disabled = true; $("btnStop").hidden = false;
-    state.ctl = new AbortController();
+    const ctl = new AbortController(), id = ++state.photoRunId, selected = state.file;
+    state.ctl = ctl;
+    const live = () => state.ctl === ctl && state.photoRunId === id && !ctl.signal.aborted;
     try {
-      const image = await toJpeg(state.file);
-      const r = await fetch("/api/read-label", {method: "POST", headers: {"Content-Type": "application/json"}, signal: state.ctl.signal,
-        body: JSON.stringify({image, mime: "image/jpeg", lang: state.lang})});
-      const j = await r.json().catch(() => ({ok: false, code: r.status === 413 ? "too_large" : "error"}));
-      if (!j.ok) return setStatus("photoStatus", photoError(j.code), true);
-      setStatus("photoStatus", "");
+      photoProgress("photoPreparing");
+      const image = await toJpeg(selected);
+      if (!live()) return;
+      photoProgress("photoSending");
+      const response = await fetch("/api/read-label",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        signal:ctl.signal,
+        body:JSON.stringify({image,mime:"image/jpeg",lang:state.lang})
+      });
+      if (!live()) return;
+      photoProgress("photoProcessing");
+      const j = await response.json().catch(() => ({ok:false,code:response.status===413?"too_large":"error"}));
+      if (!live()) return;
+      if (!j.ok) {setStatus("photoStatus",photoError(j.code),true);return;}
       const text = j.ingredients || "";
+      if (!text.trim()) {
+        state.result = {kind:"message",msg:"photoNoIngredients"};
+        setStatus("photoStatus", "");
+        render();
+        return;
+      }
       $("ingText").value = text;
-      const items = supplementE(text, state.eng.analyse(text));
-      const have = new Set(items.map(i => state.eng.norm(pick(i.name))));
-      /* The AI may add doubts, never a haram verdict: its items are always "doubtful" and marked as suggestions. */
-      (j.extra || []).forEach(x => { if (!have.has(state.eng.norm(x.term))) items.push({status: "warn", name: x.term, why: x.reason, ai: true}); });
-      if (!text) { state.result = {kind: "message", msg: "photoNoIngredients"}; return render(); }
-      showAnalysis("photo", items, {product: j.product, text, halalMark: j.halalMark, sourceKind: "photo"});
+      const items = HalalScanUtils.mergeSuggestions(
+        supplementE(text,state.eng.analyse(text)),j.extra,text
+      );
+      showAnalysis("photo",items,{product:j.product,text,halalMark:j.halalMark,sourceKind:"photo"});
+      state.photoCache = {file:selected,result:state.result};
+      setStatus("photoStatus",L().photoDone);
     } catch (e) {
-      if (!(e && e.name === "AbortError")) setStatus("photoStatus", e && e.message === "image" ? L().errImg : L().errNetwork, true);
-      else setStatus("photoStatus", "");
-    } finally { $("btnPhoto").disabled = false; $("btnStop").hidden = true; state.ctl = null; }
+      if (live()) setStatus("photoStatus",e && e.message==="image"?L().errImg:L().errNetwork,true);
+    } finally {
+      if (state.ctl === ctl) {
+        state.ctl=null;$("btnPhoto").disabled=!state.file;$("btnStop").hidden=true;
+      }
+      $("photoStatus").classList.remove("pending");
+    }
   }
 
   function onFile(f) {
+    if (state.ctl) cancelPhoto(false);
     const pv = $("preview");
-    if (pv.dataset.url) { try { URL.revokeObjectURL(pv.dataset.url); } catch (_) {} pv.dataset.url = ""; }
-    state.file = f || null;
-    // Avoid showing stale results from a different product below this image.
-    if (f) { state.result = null; $("result").hidden = true; $("result").replaceChildren(); }
-    if (!f) { pv.hidden = true; $("dropIdle").hidden = false; $("btnPhoto").disabled = true; return; }
-    const u = URL.createObjectURL(f); pv.dataset.url = u; pv.src = u; pv.hidden = false; $("dropIdle").hidden = true;
-    $("btnPhoto").disabled = false; setStatus("photoStatus", "");
+    if (pv.dataset.url) {try {URL.revokeObjectURL(pv.dataset.url)}catch(_){}pv.dataset.url="";}
+    if (f !== state.file) state.photoCache=null;
+    state.file=f||null;
+    state.result=null;$("result").hidden=true;$("result").replaceChildren();
+    if (!f) {
+      pv.hidden=true;$("dropIdle").hidden=false;$("btnPhoto").disabled=true;
+      setStatus("photoStatus","");
+      return;
+    }
+    const url=URL.createObjectURL(f);
+    pv.dataset.url=url;pv.src=url;pv.hidden=false;$("dropIdle").hidden=true;
+    $("btnPhoto").disabled=false;setStatus("photoStatus","");
   }
 
   /* ---------- boot ---------- */
@@ -340,7 +388,7 @@
     $("eInput").addEventListener("input", e => { $("evidenceLookup").href = "/encyclopedia?q=" + encodeURIComponent(e.target.value.slice(0,80)); });
     $("photoInput").addEventListener("change", e => onFile(e.target.files && e.target.files[0]));
     $("btnPhoto").onclick = readPhoto;
-    $("btnStop").onclick = () => state.ctl && state.ctl.abort();
+    $("btnStop").onclick = () => cancelPhoto(true);
     applyLang(); setTab("barcode");
     try {
       const res = await fetch("/data/rules.json");
