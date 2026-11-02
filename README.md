@@ -133,9 +133,21 @@ Google's troubleshooting guidance recommends capped exponential backoff for tran
 
 - Browser displays both models on the Photo tab, but Argon stays **disabled** until the site operator intentionally sets `GEMINI_ENABLE_ARGON=true` in Vercel Environment Variables and redeploys (Production and/or Preview). There are no secret values in `GET /api/photo-options`.
 - Backend validates model requests, **never trusts the browser's supplied model ID**. Unapproved models return `invalid_model_selection`; disabled Argon returns `model_not_enabled` without contacting Gemini.
-- With Argon enabled, extra in-app limits are **2 Argon requests per IP per hour, 12 Argon requests globally per day**, besides the existing general limits. This is only a lightweight safeguard. On distributed serverless deployments these caps require configured **shared Upstash Redis**; without it, counters may be per-instance and are *not a reliable budget guarantee*. Set billing caps at the Google account/project level independently.
+- With Argon enabled, extra in-app limits are **2 Argon requests per IP per hour, 12 Argon requests globally per day**, besides the existing general limits. This is only a lightweight safeguard. On distributed serverless deployments these caps require configured **shared Upstash Redis**; **Argon now fails closed** when this configuration is missing or Redis is not responding, before any premium model call. Never treat a locally cached counter as a reliable budget ceiling. Set billing caps at the Google account/project level independently.
 - Changing the model invalidates the selected photo's transient cached result. Reusing the same image with the same model does not make a second request.
 - `GEMINI_MODEL` is still supported as an operator-level default. The UI defaults to Flash unless both the Argon default and operator enable flag are set. The normal scanner never auto-upgrades to Argon.
 - **Verification:** Test a German supplement scan through each model only after explicitly enabling Argon, and compare exact ingredient transcription and observed latency. Model availability depends on the connected API key.
 - Official model: https://ai.google.dev/gemini-api/docs/models/gemini-4-argon
 - Google lists an introductory Argon price through **2026-11-30**; verify current pricing before enabling publicly: https://ai.google.dev/gemini-api/docs/latest-model
+
+### Premium-rate safeguard: shared Redis is required (PR #9)
+
+**Before using Argon**, connect a supported shared Redis instance (such as Upstash Redis via the Vercel Marketplace), then set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for the intended Preview/Production environment. Verify those variables exist under **Vercel Project → Settings → Environment Variables** without exposing their values.
+
+- Set `GEMINI_ENABLE_ARGON=true` only when you have deliberately approved the added per-use cost and the shared storage is present. Otherwise leave it disabled: **Flash continues working**.
+- `GET /api/photo-options` returns `argonEnabled:false` and `argonPrerequisite:"shared_counter_required"` when the flag is present but shared storage has not been configured. It never returns tokens or storage addresses.
+- Every premium Argon request checks **shared Redis**, and an outage or invalid response returns `premium_limits_unavailable` (HTTP 503), **before calling Google**. The UI explains the error in EN/NL/AR and recommends Flash.
+- Premium limits: **2 Argon requests/IP/hour** and **12 Argon requests/site/day** (besides the generic photo limits). These are safeguards, not guaranteed limits on Google billing; apply project quotas/spend alerts independently.
+- A failed Argon model call is *not* retried automatically: explicit selection should not silently increase premium token spend.
+- Current Vercel environment inspection on **2026-11-02** showed `GEMINI_ENABLE_ARGON` but **did not show either Redis variable**. Consequently, a flag alone is not enough to safely enable Argon.
+- Re-run preview tests with a genuine API key and a monitored cost budget before any public rollout. The CI suite uses a fake Redis pipeline and a fake Gemini server; it cannot certify Google availability or image transcription quality.
