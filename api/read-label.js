@@ -77,6 +77,10 @@ module.exports = async function handler(req, res) {
   const base = (process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
   const url = base + "/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
 
+  const generationConfig = {responseMimeType: "application/json", maxOutputTokens: 3072};
+  // 3.8 Flash supports low thinking; 2.5-series models do not accept thinkingLevel.
+  // The operator can change GEMINI_MODEL without silently forcing incompatible config.
+  if (/^gemini-(?:3|4)(?:[.-])/.test(model)) generationConfig.thinkingConfig = {thinkingLevel: "low"};
   let r;
   const startedAt = Date.now();
   try {
@@ -85,7 +89,7 @@ module.exports = async function handler(req, res) {
       headers: {"Content-Type": "application/json", "x-goog-api-key": key},
       body: JSON.stringify({
         contents: [{role: "user", parts: [{text: prompt(lang)}, {inline_data: {mime_type: mime, data: image}}]}],
-        generationConfig: {responseMimeType: "application/json", maxOutputTokens: 3072, thinkingConfig: {thinkingLevel: "low"}}
+        generationConfig
       })
     }, 40000);
   } catch (e) {
