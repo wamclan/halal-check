@@ -1,7 +1,7 @@
 name: Ingredient engine safety tests
 on:
   push:
-    branches: [main, "feature/**"]
+    branches: [main, "feature/**", "fix/**"]
   pull_request:
     branches: [main]
 permissions:
@@ -14,11 +14,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Syntax checks
         run: |
           node --check public/js/engine.js
           node --check public/js/app.js
+          node --check public/js/ingredient-coverage.js
           node --check public/js/evidence-core.js
           node --check public/js/evidence-ui.js
           node --check api/read-label.js

@@ -12,9 +12,14 @@ const fake = http.createServer((req, res) => {
     if (req.url.startsWith("/v1beta/models/")) {
       lastGeminiBody = JSON.parse(Buffer.concat(chunks).toString() || "{}");
       if (geminiMode === "429") { res.statusCode = 429; return res.end("{}"); }
+      if (geminiMode === "404") { res.statusCode = 404; return res.end('{"error":{"message":"Model not found"}}'); }
+      if (geminiMode === "no_ingredients") {
+        const out = {product:"Supplement",ingredients_text:"",language:"de",complete:false,halal_mark:false,extra:[]};
+        return res.end(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(out)}]}}]}));
+      }
       if (geminiMode === "blocked") return res.end(JSON.stringify({promptFeedback: {blockReason: "SAFETY"}}));
       if (geminiMode === "garbage") return res.end(JSON.stringify({candidates: [{content: {parts: [{text: "sorry no"}]}}]}));
-      const out = {product: "Koekjes", ingredients_text: "Tarwebloem, suiker, E471, gelatine\u0000", halal_mark: true,
+      const out = {product: "Koekjes", ingredients_text: "Tarwebloem, suiker, E471, gelatine\u0000", language: "nl", complete: true, halal_mark: true,
         extra: [{term: "Aroma", reason: "Kan alcohol bevatten."}, {term: "", reason: "x"}]};
       return res.end(JSON.stringify({candidates: [{content: {parts: [{text: "```json\n" + JSON.stringify(out) + "\n```"}]}}]}));
     }
@@ -52,10 +57,14 @@ test("read-label returns sanitized ingredients and forwards the image", async ()
   assert.strictEqual(j.product, "Koekjes");
   assert.ok(!j.ingredients.includes("\u0000"));
   assert.strictEqual(j.halalMark, true);
+  assert.strictEqual(j.language, "nl");
+  assert.strictEqual(j.complete, true);
   assert.strictEqual(j.extra.length, 1);
   const parts = lastGeminiBody.contents[0].parts;
   assert.strictEqual(parts[1].inline_data.data, img);
   assert.ok(parts[0].text.includes("Dutch"));
+  assert.match(parts[0].text, /original language/i);
+  assert.match(parts[0].text, /Zutaten/);
 });
 test("read-label rejects bad input", async () => {
   assert.strictEqual((await post({image: "***", mime: "image/jpeg"}, {"x-real-ip": "2.2.2.2"})).status, 400);
@@ -95,4 +104,21 @@ test("product lookup handles unknown and invalid codes", async () => {
   const j = await (await fetch(base + "/api/product?code=5000000000000", {headers: {"x-real-ip": "7.7.7.7"}})).json();
   assert.strictEqual(j.found, false);
   assert.strictEqual((await fetch(base + "/api/product?code=abc")).status, 400);
+});
+
+test("restricted or unavailable Gemini model 404 returns a specific repairable error", async () => {
+  geminiMode = "404";
+  try {
+    const r = await post({image: img, mime: "image/jpeg", lang:"ar"}, {"x-real-ip":"10.3.1.1"});
+    assert.strictEqual(r.status,503);
+    assert.equal((await r.json()).code,"model_unavailable");
+  } finally { geminiMode = "ok"; }
+});
+test("photo without a readable Zutaten list asks for a closer photo", async () => {
+  geminiMode = "no_ingredients";
+  try {
+    const r=await post({image:img,mime:"image/jpeg",lang:"ar"},{"x-real-ip":"10.3.1.2"});
+    assert.strictEqual(r.status,422);
+    assert.equal((await r.json()).code,"no_ingredients");
+  } finally { geminiMode="ok"; }
 });

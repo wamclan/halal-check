@@ -107,3 +107,10 @@ h3.hint{font-weight:500}
 .page li{margin-bottom:6px}
 .warnbox{border:2px solid var(--warn);background:var(--warn-bg);border-radius:12px;padding:10px 14px;color:var(--fg)}
 @media (prefers-reduced-motion:no-preference){.verdict{animation:pop .25s ease-out}@keyframes pop{from{transform:scale(.97);opacity:.4}}}
+
+/* Partial screening is neutral/cautious, not the green verified state. */
+.verdict.review{color:var(--warn);background:var(--warn-bg)}
+.item.unknown{border-inline-start-color:var(--warn)}
+.verdict .scope{margin-top:6px;padding-top:8px;border-top:1px solid currentColor;font-size:.85rem}
+.read .literal-text{display:inline;unicode-bidi:plaintext;white-space:pre-wrap;overflow-wrap:anywhere;text-align:start}
+#btnPhotoManual{margin-top:8px;width:100%}
