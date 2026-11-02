@@ -394,10 +394,15 @@
       const res = await fetch("/data/rules.json");
       if (!res.ok) throw new Error("rules");
       state.eng = HalalEngine.create(await res.json());
+      // This page only needs 40 source-sensitive E-code flags, not the full
+      // 431-record encyclopedia. The 22KB screening index loads much faster.
       try {
-        const evidenceRes = await fetch("/data/evidence-knowledge.json");
-        if (evidenceRes.ok && window.EvidenceCore) state.evidence = EvidenceCore.create(await evidenceRes.json());
-      } catch (e) { console.warn("Evidence catalogue unavailable; quick rules remain usable.", e); }
+        const evidenceRes = await fetch("/data/e-number-screening.json");
+        if (evidenceRes.ok) {
+          const index = await evidenceRes.json();
+          state.evidence = {byCode:new Map(index.records.map(row=>[row.code.toLowerCase(),row]))};
+        }
+      } catch (e) { console.warn("Quick E-code index unavailable; other rules remain usable."); }
     } catch (_) { state.result = {kind: "message", msg: "errRules"}; render(); }
   }
   window.addEventListener("pagehide", () => Scanner.stop());
