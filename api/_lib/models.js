@@ -3,8 +3,9 @@
 // more expensive Argon model. Never send API credentials to the browser.
 const FLASH = "gemini-3.8-flash";
 const ARGON = "gemini-4-argon";
+const {hasRedis} = require("./limit");
 function argonEnabled(env = process.env) {
-  return env.GEMINI_ENABLE_ARGON === "true";
+  return env.GEMINI_ENABLE_ARGON === "true" && hasRedis(env);
 }
 function options(env = process.env) {
   return {
@@ -13,7 +14,9 @@ function options(env = process.env) {
       {id: ARGON, enabled: argonEnabled(env)}
     ],
     defaultModel: env.GEMINI_MODEL === ARGON && argonEnabled(env) ? ARGON : FLASH,
-    argonEnabled: argonEnabled(env)
+    argonEnabled: argonEnabled(env),
+    // Safe public flags only; do not expose secret URLs or tokens.
+    argonPrerequisite: env.GEMINI_ENABLE_ARGON === "true" && !hasRedis(env) ? "shared_counter_required" : null
   };
 }
 function resolveModel(requested, env = process.env) {
@@ -26,8 +29,10 @@ function resolveModel(requested, env = process.env) {
     return {code: "invalid_model_selection"};
   if (!/^[a-zA-Z0-9._-]{2,90}$/.test(choice))
     return {code: "invalid_model_config"};
-  if (choice === ARGON && !argonEnabled(env))
+  if (choice === ARGON && env.GEMINI_ENABLE_ARGON !== "true")
     return {code: "model_not_enabled"};
+  if (choice === ARGON && !hasRedis(env))
+    return {code: "premium_limits_unavailable"};
   return {model: choice};
 }
 module.exports = {FLASH, ARGON, options, resolveModel, argonEnabled};

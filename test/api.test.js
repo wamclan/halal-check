@@ -4,11 +4,19 @@ const http = require("http");
 
 /* Fake Gemini and Open Food Facts servers so the real handlers run end to end without network or keys. */
 let lastGeminiBody = null, lastGeminiPath = null, geminiMode = "ok", geminiCalls = 0;
+let redisMode = "ok"; const redisCounters = new Map();
 const fake = http.createServer((req, res) => {
   const chunks = [];
   req.on("data", c => chunks.push(c));
   req.on("end", () => {
     res.setHeader("Content-Type", "application/json");
+    if (req.url === "/pipeline") {
+      if (redisMode === "fail") {res.statusCode=503; return res.end("{}");}
+      const command=JSON.parse(Buffer.concat(chunks).toString());
+      const key=command[0][1], n=(redisCounters.get(key)||0)+1;
+      redisCounters.set(key,n);
+      return res.end(JSON.stringify([{result:n},{result:1}]));
+    }
     if (req.url.startsWith("/v1beta/models/")) {
       lastGeminiBody = JSON.parse(Buffer.concat(chunks).toString() || "{}");
       lastGeminiPath = req.url;
@@ -201,6 +209,9 @@ test("Public client cannot request an arbitrary unapproved model", async () => {
 
 test("Operator-enabled Argon requires explicit client selection and has separate budget caps", async () => {
   process.env.GEMINI_ENABLE_ARGON="true";
+  process.env.UPSTASH_REDIS_REST_URL=process.env.GEMINI_API_BASE;
+  process.env.UPSTASH_REDIS_REST_TOKEN="test-token";
+  redisMode="ok";
   try {
     const opts=await (await fetch(base+"/api/photo-options")).json();
     assert.equal(opts.argonEnabled,true);
@@ -215,7 +226,7 @@ test("Operator-enabled Argon requires explicit client selection and has separate
     const last=await post({image:img,mime:"image/jpeg",model:"gemini-4-argon"},{"x-real-ip":"9.9.9.7"});
     assert.equal(last.status,429);
     assert.equal((await last.json()).code,"rate_limited");
-  } finally { delete process.env.GEMINI_ENABLE_ARGON; }
+  } finally { delete process.env.GEMINI_ENABLE_ARGON; delete process.env.UPSTASH_REDIS_REST_URL; delete process.env.UPSTASH_REDIS_REST_TOKEN; }
 });
 
 test("Flash remains usable even when optional Argon is disabled", async () => {
@@ -223,4 +234,59 @@ test("Flash remains usable even when optional Argon is disabled", async () => {
   const r=await post({image:img,mime:"image/jpeg",model:"gemini-3.8-flash"},{"x-real-ip":"9.9.9.8"});
   assert.equal(r.status,200);
   assert.equal((await r.json()).model,"gemini-3.8-flash");
+});
+
+
+test("premium model stays disabled even if operator flag is set without shared Redis", async () => {
+  process.env.GEMINI_ENABLE_ARGON="true";
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  try {
+    const options=await (await fetch(base+"/api/photo-options")).json();
+    assert.equal(options.argonEnabled,false);
+    assert.equal(options.argonPrerequisite,"shared_counter_required");
+    const before=geminiCalls;
+    const result=await post({image:img,mime:"image/jpeg",model:"gemini-4-argon"},{"x-real-ip":"9.9.10.1"});
+    assert.equal(result.status,503);
+    assert.equal((await result.json()).code,"premium_limits_unavailable");
+    assert.equal(geminiCalls,before);
+  } finally {delete process.env.GEMINI_ENABLE_ARGON;}
+});
+
+test("premium use fails closed if Redis is unavailable instead of using memory counters", async () => {
+  process.env.GEMINI_ENABLE_ARGON="true";
+  process.env.UPSTASH_REDIS_REST_URL=process.env.GEMINI_API_BASE;
+  process.env.UPSTASH_REDIS_REST_TOKEN="test-token";
+  redisMode="fail";
+  try {
+    const before=geminiCalls;
+    const result=await post({image:img,mime:"image/jpeg",model:"gemini-4-argon"},{"x-real-ip":"9.9.10.2"});
+    assert.equal(result.status,503);
+    assert.equal((await result.json()).code,"premium_limits_unavailable");
+    assert.equal(geminiCalls,before);
+  } finally {
+    delete process.env.GEMINI_ENABLE_ARGON;
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    redisMode="ok";
+  }
+});
+
+test("premium Argon does not automatically retry upstream 503", async () => {
+  process.env.GEMINI_ENABLE_ARGON="true";
+  process.env.UPSTASH_REDIS_REST_URL=process.env.GEMINI_API_BASE;
+  process.env.UPSTASH_REDIS_REST_TOKEN="test-token";
+  geminiCalls=0;
+  geminiMode="503";
+  try {
+    const result=await post({image:img,mime:"image/jpeg",model:"gemini-4-argon"},{"x-real-ip":"9.9.10.3"});
+    assert.equal(result.status,503);
+    assert.equal((await result.json()).code,"upstream_busy");
+    assert.equal(geminiCalls,1);
+  } finally {
+    delete process.env.GEMINI_ENABLE_ARGON;
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    geminiMode="ok";
+  }
 });

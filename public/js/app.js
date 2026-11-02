@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = id => document.getElementById(id);
-  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, photoTimer: null, argonEnabled: false, modelReady: false, barcodeCtl: null, lastBarcodeCode: null};
+  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, photoTimer: null, argonEnabled: false, argonPrerequisite: null, modelReady: false, barcodeCtl: null, lastBarcodeCode: null};
   const L = () => I18N[state.lang];
   const pick = v => (v && typeof v === "object") ? (v[state.lang] || v.en) : v;
   function el(tag, cls, text) {
@@ -25,7 +25,9 @@
     for (const id in text) $(id).textContent = t[text[id]];
     $("btnCam").textContent = state.camOn ? t.stopCam : t.startCam;
     $("photoModelLabel").textContent = t.photoModelLabel;
-    $("photoModelHint").textContent = state.argonEnabled ? t.photoModelHint : t.photoModelDisabled;
+    $("photoModelHint").textContent = state.argonEnabled ? t.photoModelHint
+      : state.argonPrerequisite === "shared_counter_required" ? t.photoModelStorage
+      : t.photoModelDisabled;
     $("photoModel").querySelector('option[value="gemini-3.8-flash"]').textContent = t.photoModelFlash;
     $("photoModel").querySelector('option[value="gemini-4-argon"]').textContent = t.photoModelArgon;
 
@@ -286,7 +288,8 @@
   function photoError(code) {
     const t = L();
     return {not_configured: t.errNotConfigured, api_auth_error: t.errApiAuth, invalid_model_config: t.errModel,
-      model_unavailable: t.errModel, model_not_enabled: t.errModelDisabled, invalid_model_selection: t.errModel,
+      model_unavailable: t.errModel, model_not_enabled: t.errModelDisabled, premium_limits_unavailable: t.errPremiumLimits,
+      invalid_model_selection: t.errModel,
       upstream_invalid_request: t.errRequest,
       rate_limited: t.errRate, daily_cap: t.errDaily, bad_image: t.errImg,
       too_large: t.errTooLarge, refused: t.errRefused,
@@ -435,6 +438,7 @@
       if (!response.ok) return;
       const options = await response.json();
       state.argonEnabled = options.argonEnabled === true;
+      state.argonPrerequisite = options.argonPrerequisite || null;
       $("photoModel").querySelector('option[value="gemini-4-argon"]').disabled = !state.argonEnabled;
       if (options.defaultModel === "gemini-4-argon" && state.argonEnabled) $("photoModel").value = "gemini-4-argon";
       applyLang();
