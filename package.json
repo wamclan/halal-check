@@ -1,6 +1,6 @@
 {
   "name": "halal-check",
-  "version": "0.3.2-mobile-scan-preview",
+  "version": "0.3.3-fast-ocr-preview",
   "private": true,
   "description": "Mobile halal ingredient checker (EN/NL/AR): barcode, photo and text.",
   "scripts": {
