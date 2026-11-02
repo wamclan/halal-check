@@ -206,3 +206,56 @@ test("photo results show two priorities and hide the rest until requested", asyn
   await page.locator(".raw-ingredients summary").click();
   await expect(page.locator(".raw-ingredients .source-text")).toContainText("Zutaten:");
 });
+
+
+test("temporary Gemini 503 is shown in Arabic without a false halal finding", async ({page}) => {
+  await page.route("**/api/read-label", route => route.fulfill({
+    status:503, contentType:"application/json",
+    body:JSON.stringify({ok:false,code:"upstream_busy"})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("خدمة Gemini غير متاحة مؤقتًا");
+  await expect(page.locator("#result")).toBeHidden();
+});
+
+
+test("Flash stays selected and Argon is unavailable until operator opt-in", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  await expect(page.locator("#photoModel")).toHaveValue("gemini-3.8-flash");
+  await expect(page.locator('#photoModel option[value="gemini-4-argon"]')).toBeDisabled();
+  await expect(page.locator("#photoModelHint")).toContainText("disabled");
+});
+
+test("Enabled Argon is explicitly passed to the photo API and not reused from Flash cache", async ({page}) => {
+  let used=[];
+  await page.route("**/api/photo-options", route => route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,defaultModel:"gemini-3.8-flash",argonEnabled:true,
+      models:[{id:"gemini-3.8-flash",enabled:true},{id:"gemini-4-argon",enabled:true}]})
+  }));
+  await page.route("**/api/read-label", async route => {
+    const req=route.request().postDataJSON();
+    used.push(req.model);
+    await route.fulfill({status:200,contentType:"application/json",
+      body:JSON.stringify({ok:true,product:"Magnesium",ingredients:"Magnesiumsalze der Speisefettsäuren",
+        model:req.model,halalMark:false,extra:[]})});
+  });
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  const picker=page.locator("#photoModel");
+  await expect(picker.locator('option[value="gemini-4-argon"]')).toBeEnabled();
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("Image processed");
+  await picker.selectOption("gemini-4-argon");
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("Image processed");
+  expect(used).toEqual(["gemini-3.8-flash","gemini-4-argon"]);
+  await page.locator("#btnPhoto").click();
+  expect(used).toHaveLength(2);
+});

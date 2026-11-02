@@ -115,3 +115,27 @@ This release further reduces unnecessary model work:
 **Quality gate:** Compare OCR transcripts on small German/Danish labels before and after low-thinking mode, especially long ingredient lists. If reduced thinking harms accuracy, use a separate preview with a higher level or another explicitly chosen model. The test suite uses mocked Gemini responses; a live latency benchmark must be performed on a real preview by an authorized tester.
 
 Official model guidance: https://ai.google.dev/gemini-api/docs/generate-content/thinking and https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash/
+
+
+### Operational follow-up: Gemini 503 overload and retries (2026-11-02)
+
+After PR #7 merged on 2026-11-02, Vercel production was confirmed READY at its merge SHA. Earlier runtime logs included **Gemini HTTP 404 and 503**; the latest clustered 503 occurred *before* the PR #7 production deployment, so no post-deployment live OCR benchmark is available yet. Production READY and mock tests do not establish upstream availability or a measured speedup.
+
+This fix retries **HTTP 503 once only**, after ~0.9–1.1 seconds, within an overall ~39-second request budget (first attempt max 27 s, second max 10 s). It does **not** retry 404 (missing/inaccessible model), 400/401/403 (bad request/auth), or 429 (could be a quota/spend cap; don't silently generate extra billable traffic). Repeated overload returns `{ok:false,code:"upstream_busy"}` without a halal verdict. Only HTTP status, attempt count and elapsed duration are logged; no photo content or secret.
+
+Google's troubleshooting guidance recommends capped exponential backoff for transient API failures: https://ai.google.dev/gemini-api/docs/troubleshooting . A single retry is a deliberate latency/cost tradeoff for an interactive mobile scanning UI; it does not guarantee recovery. More elaborate provider failover or paid capacity changes require an explicit operator decision.
+
+**Live validation still needed:** run the same uploaded German label on the new production/preview deployment, check original-language transcription, record the visible wait and Vercel `durationMs` values, then compare before/after on the same network. Do not advertise a percent speed improvement until tested.
+
+### Gemini model choice — optional premium Argon (November 2026)
+
+**Flash remains the default**, model ID `gemini-3.8-flash`; `gemini-4-argon` is an **explicit advanced option**, not an automatic fallback. Both support image inputs and structured JSON via the Gemini API. Gemini 4 Argon may take longer and typically costs more for image transcription; it is not a halal-scholarly review.
+
+- Browser displays both models on the Photo tab, but Argon stays **disabled** until the site operator intentionally sets `GEMINI_ENABLE_ARGON=true` in Vercel Environment Variables and redeploys (Production and/or Preview). There are no secret values in `GET /api/photo-options`.
+- Backend validates model requests, **never trusts the browser's supplied model ID**. Unapproved models return `invalid_model_selection`; disabled Argon returns `model_not_enabled` without contacting Gemini.
+- With Argon enabled, extra in-app limits are **2 Argon requests per IP per hour, 12 Argon requests globally per day**, besides the existing general limits. This is only a lightweight safeguard. On distributed serverless deployments these caps require configured **shared Upstash Redis**; without it, counters may be per-instance and are *not a reliable budget guarantee*. Set billing caps at the Google account/project level independently.
+- Changing the model invalidates the selected photo's transient cached result. Reusing the same image with the same model does not make a second request.
+- `GEMINI_MODEL` is still supported as an operator-level default. The UI defaults to Flash unless both the Argon default and operator enable flag are set. The normal scanner never auto-upgrades to Argon.
+- **Verification:** Test a German supplement scan through each model only after explicitly enabling Argon, and compare exact ingredient transcription and observed latency. Model availability depends on the connected API key.
+- Official model: https://ai.google.dev/gemini-api/docs/models/gemini-4-argon
+- Google lists an introductory Argon price through **2026-11-30**; verify current pricing before enabling publicly: https://ai.google.dev/gemini-api/docs/latest-model

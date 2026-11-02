@@ -59,6 +59,14 @@
     <img id="preview" alt="" hidden>
   </label>
   <input class="vh" type="file" id="photoInput" accept="image/*" capture="environment">
+  <div class="model-picker">
+    <label id="photoModelLabel" for="photoModel">Gemini model</label>
+    <select id="photoModel" class="field">
+      <option value="gemini-3.8-flash">Gemini 3.8 Flash — fast</option>
+      <option value="gemini-4-argon" disabled>Gemini 4 Argon — advanced</option>
+    </select>
+    <p class="hint" id="photoModelHint"></p>
+  </div>
   <div class="row">
     <button type="button" class="btn" id="btnPhoto" disabled></button>
     <button type="button" class="btn ghost" id="btnStop" hidden></button>

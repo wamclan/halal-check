@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = id => document.getElementById(id);
-  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, photoTimer: null, barcodeCtl: null, lastBarcodeCode: null};
+  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, photoTimer: null, argonEnabled: false, modelReady: false, barcodeCtl: null, lastBarcodeCode: null};
   const L = () => I18N[state.lang];
   const pick = v => (v && typeof v === "object") ? (v[state.lang] || v.en) : v;
   function el(tag, cls, text) {
@@ -24,6 +24,11 @@
       tEHint: "eHint", btnE: "checkE", footLegal: "footLegal"};
     for (const id in text) $(id).textContent = t[text[id]];
     $("btnCam").textContent = state.camOn ? t.stopCam : t.startCam;
+    $("photoModelLabel").textContent = t.photoModelLabel;
+    $("photoModelHint").textContent = state.argonEnabled ? t.photoModelHint : t.photoModelDisabled;
+    $("photoModel").querySelector('option[value="gemini-3.8-flash"]').textContent = t.photoModelFlash;
+    $("photoModel").querySelector('option[value="gemini-4-argon"]').textContent = t.photoModelArgon;
+
     $("barcodeInput").placeholder = t.manualPlaceholder;
     document.querySelectorAll(".langs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === state.lang)));
     const ex = $("examples"); ex.replaceChildren(el("span", "hint", t.exTitle + ":"));
@@ -281,7 +286,8 @@
   function photoError(code) {
     const t = L();
     return {not_configured: t.errNotConfigured, api_auth_error: t.errApiAuth, invalid_model_config: t.errModel,
-      model_unavailable: t.errModel, upstream_invalid_request: t.errRequest,
+      model_unavailable: t.errModel, model_not_enabled: t.errModelDisabled, invalid_model_selection: t.errModel,
+      upstream_invalid_request: t.errRequest,
       rate_limited: t.errRate, daily_cap: t.errDaily, bad_image: t.errImg,
       too_large: t.errTooLarge, refused: t.errRefused,
       unreadable: t.errUnreadable, upstream_busy: t.errBusy, upstream_timeout: t.errBusy}[code] || t.errGeneric;
@@ -308,7 +314,7 @@
     if (!state.file || !ready() || state.ctl) return;
     // Rechecking the SAME selected photo uses the in-memory transcript instead of
     // paying for another upload and model request. It never persists across reloads.
-    if (state.photoCache && state.photoCache.file === state.file) {
+    if (state.photoCache && state.photoCache.file === state.file && state.photoCache.model === $("photoModel").value) {
       state.result = state.photoCache.result;
       setStatus("photoStatus", L().photoReused);
       render();
@@ -337,7 +343,7 @@
       const response = await fetch("/api/read-label",{
         method:"POST",headers:{"Content-Type":"application/json"},
         signal:ctl.signal,
-        body:JSON.stringify({image,mime:"image/jpeg",lang:state.lang})
+        body:JSON.stringify({image,mime:"image/jpeg",lang:state.lang,model:$("photoModel").value})
       });
       if (!live()) return;
       if (state.photoTimer) {clearInterval(state.photoTimer);state.photoTimer=null;}
@@ -357,7 +363,7 @@
         supplementE(text,state.eng.analyse(text)),j.extra,text
       );
       showAnalysis("photo",items,{product:j.product,text,halalMark:j.halalMark,sourceKind:"photo"});
-      state.photoCache = {file:selected,result:state.result};
+      state.photoCache = {file:selected,model:$("photoModel").value,result:state.result};
       setStatus("photoStatus",L().photoDone);
     } catch (e) {
       if (live()) setStatus("photoStatus",e && e.message==="image"?L().errImg:L().errNetwork,true);
@@ -413,10 +419,27 @@
     $("btnE").onclick = runE;
     $("eInput").addEventListener("keydown", e => { if (e.key === "Enter") runE(); });
     $("eInput").addEventListener("input", e => { $("evidenceLookup").href = "/encyclopedia?q=" + encodeURIComponent(e.target.value.slice(0,80)); });
+    $("photoModel").addEventListener("change", () => {
+      if (state.ctl) cancelPhoto(false);
+      state.photoCache = null;
+      state.result = null; $("result").hidden = true; $("result").replaceChildren();
+      setStatus("photoStatus","");
+    });
     $("photoInput").addEventListener("change", e => onFile(e.target.files && e.target.files[0]));
     $("btnPhoto").onclick = readPhoto;
     $("btnStop").onclick = () => cancelPhoto(true);
     applyLang(); setTab("barcode");
+    // Read model options asynchronously, without delaying the ingredient rules
+    // or the barcode scanner on slow networks.
+    fetch("/api/photo-options").then(async response => {
+      if (!response.ok) return;
+      const options = await response.json();
+      state.argonEnabled = options.argonEnabled === true;
+      $("photoModel").querySelector('option[value="gemini-4-argon"]').disabled = !state.argonEnabled;
+      if (options.defaultModel === "gemini-4-argon" && state.argonEnabled) $("photoModel").value = "gemini-4-argon";
+      applyLang();
+    }).catch(() => { /* Flash continues working if options are unavailable. */ });
+
     try {
       const res = await fetch("/data/rules.json");
       if (!res.ok) throw new Error("rules");
