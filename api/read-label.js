@@ -66,10 +66,9 @@ module.exports = async function handler(req, res) {
   const all = await bump("cap:photo:" + day, 90000);
   if (all > dailyCap) return send(res, 429, {ok: false, code: "daily_cap"});
 
-  // New Gemini projects may not have access to the 2.5 series (generation can return 404).
-  // Keep this configurable for project/account-specific availability; do not auto-fallback
-  // to a more expensive model without operator approval.
-  const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+  // Gemini 3.8 Flash is a stable vision-capable model. Keep the exact model ID configurable.
+  // A 404 can mean a model ID is unavailable for this API key or endpoint.
+  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
   if (!/^[a-zA-Z0-9._-]{2,90}$/.test(model)) return send(res, 503, {ok: false, code: "invalid_model_config"});
   const base = (process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
   const url = base + "/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
