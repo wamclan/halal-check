@@ -3,7 +3,7 @@
    Reads an ingredient label with the Gemini vision API and returns the transcribed ingredients.
    The photo is processed in memory only. Nothing is stored and the image is never logged. */
 const {send, clientIp, sameSite, readJson, clean, fetchTimeout} = require("./_lib/util");
-const {bump} = require("./_lib/limit");
+const {bump, bumpStrict} = require("./_lib/limit");
 const {ARGON, resolveModel} = require("./_lib/models");
 
 const LANG_NAME = {en: "English", nl: "Dutch", ar: "Arabic"};
@@ -67,7 +67,9 @@ module.exports = async function handler(req, res) {
   // requires an operator flag. Reject before consuming any Gemini quota.
   const choice = resolveModel(body.model);
   if (choice.code) {
-    return send(res, choice.code === "model_not_enabled" ? 403 : 400, {ok: false, code: choice.code});
+    const status = choice.code === "model_not_enabled" ? 403
+      : choice.code === "premium_limits_unavailable" ? 503 : 400;
+    return send(res, status, {ok: false, code: choice.code});
   }
   const model = choice.model;
 
@@ -81,12 +83,16 @@ module.exports = async function handler(req, res) {
 
   // Resolve model after server-side allowlist and operator authorization.
   if (model === ARGON) {
-    // This additional, separate cap limits unintended premium usage on public
-    // sites even when Argon has been enabled by the operator.
-    const perHourArgon = await bump("rl:argon:" + clientIp(req), 3600);
-    if (perHourArgon > 2) return send(res, 429, {ok:false, code:"rate_limited"}, {"Retry-After":"3600"});
-    const argonDay = await bump("cap:argon:" + day, 90000);
-    if (argonDay > 12) return send(res, 429, {ok:false,code:"daily_cap"});
+    // Fail closed on unavailable shared storage; memory counters would permit
+    // inconsistent quotas across serverless instances and unexpected costs.
+    try {
+      const perHourArgon = await bumpStrict("rl:argon:" + clientIp(req), 3600);
+      if (perHourArgon > 2) return send(res, 429, {ok:false,code:"rate_limited"}, {"Retry-After":"3600"});
+      const argonDay = await bumpStrict("cap:argon:" + day, 90000);
+      if (argonDay > 12) return send(res, 429, {ok:false,code:"daily_cap"});
+    } catch (_) {
+      return send(res, 503, {ok:false, code:"premium_limits_unavailable"});
+    }
   }
 
   const base = (process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
@@ -120,7 +126,8 @@ module.exports = async function handler(req, res) {
     } catch (_) {
       timedOut = true; break; // Never retry unknown network failures or timeouts.
     }
-    if (r.status !== 503 || attempts >= 2) break;
+    // Do not automatically repeat higher-cost Argon requests.
+    if (r.status !== 503 || attempts >= 2 || model === ARGON) break;
     // Google recommends a short backoff for 503 UNAVAILABLE.
     // Retrying the same model once preserves user-selected model and cost policy.
     const delay = 900 + Math.floor(Math.random() * 201);
