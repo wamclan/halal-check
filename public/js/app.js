@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = id => document.getElementById(id);
-  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, barcodeCtl: null, lastBarcodeCode: null};
+  const state = {lang: "en", tab: "barcode", result: null, file: null, eng: null, evidence: null, ctl: null, camOn: false, photoRunId: 0, photoCache: null, photoTimer: null, barcodeCtl: null, lastBarcodeCode: null};
   const L = () => I18N[state.lang];
   const pick = v => (v && typeof v === "object") ? (v[state.lang] || v.en) : v;
   function el(tag, cls, text) {
@@ -106,10 +106,17 @@
       v.append(el("p", "cert", t.notCert));
       box.append(v);
       if (r.items.length) {
-        box.append(el("h3", "hint", t.flagged));
+        box.append(el("h3", "hint", t.flagged + " (" + r.items.length + ")"));
         const ul = el("ul", "ledger");
-        r.items.forEach(it => ul.append(itemNode(it)));
+        r.items.slice(0, 2).forEach(it => ul.append(itemNode(it)));
         box.append(ul);
+        if (r.items.length > 2) {
+          const more = el("details", "more-findings");
+          more.append(el("summary", null, t.moreFindings.replace("{n}", r.items.length - 2)));
+          const additional = el("ul", "ledger");
+          r.items.slice(2).forEach(it => additional.append(itemNode(it)));
+          more.append(additional);box.append(more);
+        }
       }
       appendRead(box, r.read);
       box.append(el("p", "meta", rulesLine()));
@@ -124,7 +131,12 @@
     const d = el("div", "read");
     const line = (label, val) => { const p = el("div"); const value = el("span", "source-text", val); value.dir = "auto"; p.append(el("b", null, label + ": "), value); d.append(p); };
     if (rd.product) line(t.product, rd.brand ? rd.product + " (" + rd.brand + ")" : rd.product);
-    if (rd.text) line(rd.sourceKind === "off" ? t.readFromDatabase : rd.sourceKind === "photo" ? t.readFromPhoto : t.read, rd.text);
+    if (rd.text) {
+      const details = el("details","raw-ingredients");
+      details.append(el("summary",null,rd.sourceKind === "off" ? t.readFromDatabase : rd.sourceKind === "photo" ? t.readFromPhoto : t.read));
+      const labelText = el("p","source-text",rd.text);labelText.dir="auto";details.append(labelText);
+      d.append(details);
+    }
     if (rd.halalMark) d.append(el("div", null, "✓ " + t.halalMark));
     if (rd.dbHalal) d.append(el("div", null, "✓ " + t.halalLabelDb));
     if (rd.sourceUrl) {
@@ -281,6 +293,7 @@
     state.photoRunId++;
     const old = state.ctl;
     state.ctl = null;
+    if (state.photoTimer) {clearInterval(state.photoTimer);state.photoTimer=null;}
     old.abort();
     $("btnPhoto").disabled = !state.file;
     $("btnStop").hidden = true;
@@ -311,12 +324,23 @@
       const image = await toJpeg(selected);
       if (!live()) return;
       photoProgress("photoSending");
+      // Report elapsed time, not a fictional completion percentage/ETA.
+      const startedAt=Date.now();
+      state.photoTimer=setInterval(()=>{
+        if (!live()) return;
+        const elapsed=Math.floor((Date.now()-startedAt)/1000);
+        if (elapsed>=10) {
+          setStatus("photoStatus", L().photoWaiting.replace("{s}", String(elapsed)));
+          $("photoStatus").classList.add("pending");
+        }
+      },2500);
       const response = await fetch("/api/read-label",{
         method:"POST",headers:{"Content-Type":"application/json"},
         signal:ctl.signal,
         body:JSON.stringify({image,mime:"image/jpeg",lang:state.lang})
       });
       if (!live()) return;
+      if (state.photoTimer) {clearInterval(state.photoTimer);state.photoTimer=null;}
       photoProgress("photoProcessing");
       const j = await response.json().catch(() => ({ok:false,code:response.status===413?"too_large":"error"}));
       if (!live()) return;
@@ -339,6 +363,7 @@
       if (live()) setStatus("photoStatus",e && e.message==="image"?L().errImg:L().errNetwork,true);
     } finally {
       if (state.ctl === ctl) {
+        if (state.photoTimer) {clearInterval(state.photoTimer);state.photoTimer=null;}
         state.ctl=null;$("btnPhoto").disabled=!state.file;$("btnStop").hidden=true;
         $("photoStatus").classList.remove("pending");
       }
