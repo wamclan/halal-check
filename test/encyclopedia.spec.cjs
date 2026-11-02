@@ -183,3 +183,26 @@ test("Arabic scanner language carries into the evidence encyclopedia", async ({p
   await page.goto("http://127.0.0.1:3000/");
   await expect(page.locator(".langs button[data-lang='nl']")).toHaveAttribute("aria-pressed","true");
 });
+
+
+test("photo results show two priorities and hide the rest until requested", async ({page}) => {
+  await page.route("**/api/read-label",route => route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,product:"Supplement sample",
+      ingredients:"Zutaten: Gelatine, Molkenpulver, E471, Vitamin D3, Wasser",
+      halalMark:false,extra:[]})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#panel-photo #result .ledger").first().locator("li")).toHaveCount(2);
+  await expect(page.locator(".more-findings")).toBeVisible();
+  await expect(page.locator(".more-findings")).not.toHaveAttribute("open");
+  await page.locator(".more-findings summary").click();
+  await expect(page.locator(".more-findings .ledger li").first()).toBeVisible();
+  await expect(page.locator(".raw-ingredients")).not.toHaveAttribute("open");
+  await expect(page.locator(".raw-ingredients summary")).toContainText("Ingredients transcribed");
+  await page.locator(".raw-ingredients summary").click();
+  await expect(page.locator(".raw-ingredients .source-text")).toContainText("Zutaten:");
+});

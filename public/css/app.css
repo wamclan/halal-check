@@ -104,6 +104,12 @@ h3.hint{font-weight:500}
 .item p{margin:0;font-size:.9rem;color:var(--muted);overflow-wrap:anywhere}
 .read{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:.9rem;color:var(--muted);overflow-wrap:anywhere;display:grid;gap:4px}
 .read b{color:var(--fg)}
+.raw-ingredients,.more-findings{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.raw-ingredients summary,.more-findings summary{cursor:pointer;list-style:revert;font-weight:600;color:var(--accent)}
+.raw-ingredients .source-text{margin:12px 0 4px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.more-findings .ledger{margin-top:12px}
+#photoStatus.pending{font-weight:600}
+@media (prefers-reduced-motion: no-preference){#photoStatus.pending::before{content:"";display:inline-block;width:8px;height:8px;margin-inline-end:9px;border-radius:100%;background:currentColor;animation:ocrpulse 1.25s infinite}@keyframes ocrpulse{50%{opacity:.25;transform:scale(.7)}}}
 .meta{font-size:.8rem;color:var(--muted);margin:0}
 .foot{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;margin-top:22px;display:grid;gap:6px}
 

@@ -98,3 +98,20 @@ Vercel runtime showed `gemini status 404` on `POST /api/read-label` using the pr
 - Reference: https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash
 
 Manual release validation remains required: real Gemini OCR with a production-like key, image permissions, PWA, physical mobile cameras, and scientific/fiqh review.
+
+
+### Video-based mobile OCR performance review — November 2026
+
+An approximately **148-second iPhone screen recording** of a German magnesium supplement showed a very long loading state between sending a photo and rendering the result. Its initial output had duplicate source alerts for a single ingredient (magnesium salts of fatty acids). PR #6 already addressed deduplication, cached repeat scans and result placement.
+
+This release further reduces unnecessary model work:
+- The **Gemini 3.8 Flash** request now uses `generationConfig.thinkingConfig.thinkingLevel=low` (officially supported). This reduces reasoning effort for transcription; no precise latency improvement is promised until live measurements.
+- Gemini **only transcribes** printed ingredients and product names, returning JSON without supplemental halal/source judgements. Deterministic local rules produce source questions and citations; `extra` stays an empty array for legacy clients. Missing origins remain unknown, not haram.
+- Gemini 2.5 and other older model IDs do not receive incompatible `thinkingLevel` settings.
+- The client displays elapsed reading time after 10 seconds, without inventing a percentage or estimated completion time. Cancel remains available.
+- The result prioritizes two findings and keeps remaining findings and the full original-language transcription in expandable sections; full evidence is still accessible.
+- Production performance can be diagnosed using existing duration-only Vercel `gemini vision response` logs. These do not log images or API credentials.
+
+**Quality gate:** Compare OCR transcripts on small German/Danish labels before and after low-thinking mode, especially long ingredient lists. If reduced thinking harms accuracy, use a separate preview with a higher level or another explicitly chosen model. The test suite uses mocked Gemini responses; a live latency benchmark must be performed on a real preview by an authorized tester.
+
+Official model guidance: https://ai.google.dev/gemini-api/docs/generate-content/thinking and https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash/
