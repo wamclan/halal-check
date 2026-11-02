@@ -24,5 +24,7 @@ jobs:
           node --check public/js/evidence-core.js
           node --check public/js/evidence-ui.js
           node --check api/read-label.js
+          node --check api/photo-options.js
+          node --check api/_lib/models.js
       - name: Test engine and server handlers
         run: npm test
