@@ -1,10 +1,10 @@
 {
   "meta": {
-    "version": "0.2.1-evidence-safety",
+    "version": "0.2.2-language-coverage",
     "updated": "2026-11-01",
     "reviewStatus": "draft",
     "reviewedBy": null,
-    "note": "Unreviewed draft. Conservative flags only. Generic halal statements, plant/fish mentions or a brand's claim do not certify every ingredient. See docs/evidence-register-2026-11.md."
+    "note": "Conservative multilingual flags (EN/NL/AR/DE/DA/FR); no automated halal certification. Ingredients not recognised must not imply a complete check."
   },
   "rules": [
     {
@@ -35,7 +35,13 @@
         "الخنزير",
         "لحم الخنزير",
         "شحم الخنزير",
-        "لارد"
+        "لارد",
+        "Schweinefleisch",
+        "Schweinefett",
+        "Schweineschmalz",
+        "svinekød",
+        "svinefedt",
+        "griskött"
       ]
     },
     {
@@ -130,7 +136,11 @@
         "fish gelatin",
         "fish gelatine",
         "gelatine de poisson",
-        "Fischgelatine"
+        "Fischgelatine",
+        "gelatine bovine",
+        "Gelatine vom Schwein",
+        "Gelatine vom Rind",
+        "gelatin fra svin"
       ],
       "clearedBy": "any"
     },
@@ -241,7 +251,15 @@
         "rennet",
         "stremsel",
         "منفحة",
-        "المنفحة"
+        "المنفحة",
+        "Labenzym",
+        "Labenzyme",
+        "tierisches Lab",
+        "mikrobielles Lab",
+        "Løbe",
+        "Osteløbe",
+        "présure",
+        "caglio"
       ],
       "clearedBy": "any"
     },
@@ -266,7 +284,19 @@
         "mozzarella",
         "parmesan",
         "جبن",
-        "جبنة"
+        "جبنة",
+        "ost",
+        "Parmigiano Reggiano",
+        "Parmigiano Reggiano-ost",
+        "Parmesanost",
+        "Parmesan-ost",
+        "Grana Padano",
+        "Käse",
+        "Kaese",
+        "Hartkäse",
+        "fromage",
+        "queso",
+        "formaggio"
       ],
       "clearedBy": "any"
     },
@@ -290,7 +320,12 @@
         "weipoeder",
         "melkserum",
         "مصل اللبن",
-        "مصل الحليب"
+        "مصل الحليب",
+        "Molke",
+        "Molkepulver",
+        "Valle",
+        "Vallepulver",
+        "Vassle"
       ],
       "clearedBy": "any"
     },
@@ -508,7 +543,11 @@
         "إنزيمات",
         "انزيمات",
         "إنزيم",
-        "انزيم"
+        "انزيم",
+        "Enzyme",
+        "Enzympräparat",
+        "Enzympräparate",
+        "Enzymer"
       ],
       "clearedBy": "any"
     },
@@ -562,6 +601,33 @@
         "مسحوق العظام"
       ],
       "clearedBy": "any"
+    },
+    {
+      "id": "fatty-acid-salts-origin",
+      "status": "warn",
+      "name": {
+        "en": "Fatty acid salts / stearates",
+        "nl": "Zouten van vetzuren / stearaten",
+        "ar": "أملاح الأحماض الدهنية والستيارات"
+      },
+      "reason": {
+        "en": "Magnesium/calcium salts of fatty acids or stearates may use plant or animal feedstocks. Verify supplier origin; the ingredient name alone does not prove haram.",
+        "nl": "Magnesium- of calciumzouten van vetzuren/stearaten kunnen van plantaardige of dierlijke grondstoffen afkomstig zijn. Controleer de leverancier.",
+        "ar": "يمكن تصنيع أملاح الأحماض الدهنية والستيارات من مصادر نباتية أو حيوانية. يلزم التحقق من مصدر المورد، ولا يدل الاسم وحده على التحريم."
+      },
+      "terms": [
+        "Speisefettsäuren",
+        "Speisefettsäure",
+        "Magnesiumsalze der Speisefettsäuren",
+        "Calciumsalze der Speisefettsäuren",
+        "Magnesiumstearat",
+        "Calciumstearat",
+        "Stearinsäure",
+        "salts of fatty acids",
+        "magnesium stearate",
+        "calcium stearate",
+        "sels d'acides gras"
+      ]
     }
   ],
   "eNumbers": {
