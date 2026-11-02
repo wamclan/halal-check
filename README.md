@@ -115,3 +115,14 @@ This release further reduces unnecessary model work:
 **Quality gate:** Compare OCR transcripts on small German/Danish labels before and after low-thinking mode, especially long ingredient lists. If reduced thinking harms accuracy, use a separate preview with a higher level or another explicitly chosen model. The test suite uses mocked Gemini responses; a live latency benchmark must be performed on a real preview by an authorized tester.
 
 Official model guidance: https://ai.google.dev/gemini-api/docs/generate-content/thinking and https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash/
+
+
+### Operational follow-up: Gemini 503 overload and retries (2026-11-02)
+
+After PR #7 merged on 2026-11-02, Vercel production was confirmed READY at its merge SHA. Earlier runtime logs included **Gemini HTTP 404 and 503**; the latest clustered 503 occurred *before* the PR #7 production deployment, so no post-deployment live OCR benchmark is available yet. Production READY and mock tests do not establish upstream availability or a measured speedup.
+
+This fix retries **HTTP 503 once only**, after ~0.9–1.1 seconds, within an overall ~39-second request budget (first attempt max 27 s, second max 10 s). It does **not** retry 404 (missing/inaccessible model), 400/401/403 (bad request/auth), or 429 (could be a quota/spend cap; don't silently generate extra billable traffic). Repeated overload returns `{ok:false,code:"upstream_busy"}` without a halal verdict. Only HTTP status, attempt count and elapsed duration are logged; no photo content or secret.
+
+Google's troubleshooting guidance recommends capped exponential backoff for transient API failures: https://ai.google.dev/gemini-api/docs/troubleshooting . A single retry is a deliberate latency/cost tradeoff for an interactive mobile scanning UI; it does not guarantee recovery. More elaborate provider failover or paid capacity changes require an explicit operator decision.
+
+**Live validation still needed:** run the same uploaded German label on the new production/preview deployment, check original-language transcription, record the visible wait and Vercel `durationMs` values, then compare before/after on the same network. Do not advertise a percent speed improvement until tested.
