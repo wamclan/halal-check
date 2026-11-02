@@ -7,6 +7,7 @@
   const WORDS = {
     de: ["zutaten","speisefettsäuren","magnesiumsalze","trennmittel","füllstoff","nahrungsergänzungsmittel","farbstoff","magnesiumoxid","käse","molke"],
     da: ["ingredienser","æggeblomme","rapsolie","sennepsmel","worcestersaus","ansjospaste","hvidløgspulver","eddike","xanthangummi","stabilisator","parmesanost"],
+    nb: ["ingredienser","vann","eggeplomme","hvitvinseddik","sitronjuicekonsentrat","sennepsmel","svart pepper","hvitløkspulver","tørket løk","olivenolje","ansjospaste"],
     nl: ["ingrediënten","zonnebloemolie","stremsel","aardappelzetmeel","weipoeder","plantaardige","suiker"],
     en: ["ingredients","cheese","whey","flavouring","sunflower oil","vegetable oil","sugar","egg yolk"],
     fr: ["ingrédients","présure","fromage","gélatine","sucre","huile végétale"],
@@ -17,6 +18,7 @@
     da: {en:"Danish",nl:"Deens",ar:"الدنماركية"},
     en: {en:"English",nl:"Engels",ar:"الإنجليزية"},
     nl: {en:"Dutch",nl:"Nederlands",ar:"الهولندية"},
+    nb: {en:"Norwegian Bokmål",nl:"Noors (Bokmål)",ar:"النرويجية"},
     fr: {en:"French",nl:"Frans",ar:"الفرنسية"},
     ar: {en:"Arabic",nl:"Arabisch",ar:"العربية"},
     und: {en:"Not identified",nl:"Niet vastgesteld",ar:"غير محددة"}
