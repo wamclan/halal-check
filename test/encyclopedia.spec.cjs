@@ -60,3 +60,44 @@ test("PWA can reopen the evidence catalogue without a network", async ({page,con
   await expect(page.locator("#results .card").first()).toBeVisible();
   await context.setOffline(false);
 });
+
+test("Norwegian label with Parmigiano Reggiano-ost does not produce false all-clear", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-text").click();
+  await page.locator("#ingText").fill("Rapsolie (62%), vann, eggeplomme, Parmigiano Reggiano-ost (melk) (1%), sennepsmel, hvitløkspulver");
+  await page.locator("#btnText").click();
+  await expect(page.locator("#result .verdict.warn")).toBeVisible();
+  await expect(page.locator("#result")).toContainText("Norwegian Bokmål");
+  await expect(page.locator("#result")).toContainText("Cheese");
+});
+test("German magnesium supplement label identifies fatty-acid salts", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-text").click();
+  await page.locator("#ingText").fill("Zutaten: Füllstoff Cellulose, Trennmittel Magnesiumsalze der Speisefettsäuren, Trennmittel Talkum, Vitamin B12");
+  await page.locator("#btnText").click();
+  await expect(page.locator("#result .verdict.warn")).toBeVisible();
+  await expect(page.locator("#result")).toContainText("German");
+  await expect(page.locator("#result")).toContainText("Fatty acid salts");
+});
+test("no keyword findings means incomplete review, not green verified", async ({page}) => {
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-text").click();
+  await page.locator("#ingText").fill("vann, olivenolje, ansjos");
+  await page.locator("#btnText").click();
+  await expect(page.locator("#result .verdict.review")).toBeVisible();
+  await expect(page.locator("#result")).toContainText("Partial keyword screening");
+});
+test("Gemini model 404 offers an actionable error and manual entry", async ({page}) => {
+  await page.route("**/api/read-label", route => route.fulfill({
+    status:503,contentType:"application/json",body:JSON.stringify({ok:false,code:"model_unavailable"})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  const tiny = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/eFUAAAAASUVORK5CYII=", "base64");
+  await page.locator("#photoInput").setInputFiles({name:"ingredients.png",mimeType:"image/png",buffer:tiny});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("model is unavailable");
+  await expect(page.locator("#btnPhotoManual")).toBeVisible();
+  await page.locator("#btnPhotoManual").click();
+  await expect(page.locator("#panel-text")).toBeVisible();
+});
