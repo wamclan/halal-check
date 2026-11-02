@@ -116,3 +116,59 @@ test("German supplement OCR result flags fatty-acid salts without invented verdi
   await expect(page.locator("#result")).toContainText("المكونات المستخرجة من الصورة");
   await expect(page.locator("#result")).not.toContainText("مكوّن حرام");
 });
+
+test("photo processing deduplicates magnesium salt explanations and caches the same selected photo", async ({page}) => {
+  let calls=0;
+  await page.route("**/api/read-label", async route => {
+    calls++;
+    await route.fulfill({status:200,contentType:"application/json",
+      body:JSON.stringify({ok:true,product:"Magnesium supplement",
+        ingredients:"Trennmittel Magnesiumsalze der Speisefettsäuren, Magnesiumoxid, Vitamin B12",
+        extra:[
+          {term:"Speisefettsäuren",reason:"Source?"},
+          {term:"Magnesiumsalze der Speisefettsäuren",reason:"Source?"},
+          {term:"Magnesiumsalze",reason:"Source?"}
+        ],halalMark:false})
+    });
+  });
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"ingredients.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#panel-photo #result .ledger li")).toHaveCount(1);
+  await expect(page.locator("#panel-photo #result")).toContainText("أملاح الأحماض الدهنية");
+  await expect(page.locator("#photoStatus")).toContainText("اكتملت قراءة الصورة");
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("دون إرسال طلب جديد");
+  expect(calls).toBe(1);
+});
+test("results are shown in the active scanner instead of beneath unrelated tabs", async ({page}) => {
+  await page.route("**/api/product?*", route=>route.fulfill({status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,found:true,ingredients:"gelatin",name:"Snack"})}));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#barcodeInput").fill("3017620422003");
+  await page.locator("#btnLookup").click();
+  await expect(page.locator("#panel-barcode #result")).toContainText("Snack");
+  await page.locator("#tab-photo").click();
+  await expect(page.locator("#result")).toBeHidden();
+  expect(await page.locator("#result").evaluate(el=>el.parentElement.id)).toBe("panel-photo");
+  await expect(page.locator("#panel-photo")).toBeVisible();
+});
+test("photo button has a visible processing phase and prevents duplicate requests", async ({page}) => {
+  let called=0;
+  await page.route("**/api/read-label",async route=>{
+    called++;
+    await new Promise(resolve=>setTimeout(resolve,250));
+    if(!route.request().isNavigationRequest()) await route.fulfill({status:200,contentType:"application/json",
+      body:JSON.stringify({ok:true,product:"Sample",ingredients:"gelatin",extra:[],halalMark:false})}).catch(()=>{});
+  });
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"ingredients.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#btnPhoto")).toBeDisabled();
+  await expect(page.locator("#photoStatus")).toHaveClass(/pending/);
+  await expect(page.locator("#panel-photo #result")).toBeVisible();
+  expect(called).toBe(1);
+});
