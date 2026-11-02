@@ -91,12 +91,12 @@
     const a=elem("a");a.href=url;a.download="halal-lens-evidence.csv";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   async function boot(){
-    let saved="";try{saved=localStorage.getItem("halal-lens-language")||""}catch(_){}
+    let saved="";try{saved=localStorage.getItem("halal-lang")||localStorage.getItem("halal-lens-language")||""}catch(_){}
     lang=TXT[saved]?saved:TXT[(navigator.language||"ar").slice(0,2)]?(navigator.language||"ar").slice(0,2):"ar";
     const deepQuery = new URLSearchParams(location.search).get("q");
     if (deepQuery) $("query").value = deepQuery.slice(0,120);
     localise();
-    $("language").addEventListener("change",e=>{lang=TXT[e.target.value]?e.target.value:"ar";try{localStorage.setItem("halal-lens-language",lang)}catch(_){}localise();});
+    $("language").addEventListener("change",e=>{lang=TXT[e.target.value]?e.target.value:"ar";try{localStorage.setItem("halal-lens-language",lang);localStorage.setItem("halal-lang",lang)}catch(_){}localise();});
     for(const id of ["query","kind","status"])$(id).addEventListener(id==="query"?"input":"change",()=>render(true));
     $("more").addEventListener("click",()=>render(false));
     $("export").addEventListener("click",exportCsv);
