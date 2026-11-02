@@ -80,3 +80,29 @@ test("pork-free and vegan pork wording is not definitive", () => {
 test("explicit lard still triggers a source flag", () => {
   assert.equal(run("water, lard, salt").verdict, "bad");
 });
+
+test("Scandinavian Caesar dressing raises a cheese rennet-source question", () => {
+  const label = "Rapsolie (62%), vann, pasteurisert eggeplomme, Parmigiano Reggiano-ost (mælk) (1%), salt, worcestersaus (vann, eddik, tamarind), ansjospaste";
+  const r = run(label);
+  assert.strictEqual(r.verdict, "warn");
+  assert.ok(r.names.some(n => n.includes("Cheese")), JSON.stringify(r.names));
+  assert.notStrictEqual(r.verdict, "bad");
+});
+test("German supplement fatty-acid salts trigger a source review", () => {
+  const label = "Zutaten: Magnesiumoxide, Füllstoff mikrokristalline Cellulose, Trennmittel Magnesiumsalze der Speisefettsäuren, Vitamin B6, Folsäure, Vitamin B12";
+  const r = run(label);
+  assert.strictEqual(r.verdict, "warn");
+  assert.ok(r.names.some(n => n.includes("Fatty-acid salts")), JSON.stringify(r.names));
+  assert.ok(!r.names.some(n => n.startsWith("bad:")));
+});
+test("German vitamin D3 mentions origin uncertainty without a categorical prohibition", () => {
+  const r = run("Vitamine D3, Magnesiumoxide");
+  assert.strictEqual(r.verdict,"warn");
+  assert.ok(r.names.some(n => n.includes("Vitamin D3")));
+  assert.ok(!r.names.some(n => n.startsWith("bad:")));
+});
+test("Unrelated plain ingredients do not produce invented flags", () => {
+  const r = run("Zutaten: Magnesiumoxide, Folsäure, Vitamin B12, Cellulose, Wasser");
+  assert.strictEqual(r.verdict,"ok");
+  assert.equal(r.names.length,0);
+});
