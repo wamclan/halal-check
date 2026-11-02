@@ -80,6 +80,9 @@ textarea{min-height:130px;resize:vertical}
 .verdict{border-radius:18px;padding:18px;border:2px solid currentColor;display:grid;gap:8px}
 .verdict.ok{color:var(--ok);background:var(--ok-bg)}
 .verdict.warn{color:var(--warn);background:var(--warn-bg)}
+.verdict.review{color:var(--warn);background:var(--warn-bg)}
+.item.unknown{border-inline-start-color:var(--warn)}
+.source-text{unicode-bidi:plaintext;white-space:pre-wrap;overflow-wrap:anywhere}
 .verdict.bad{color:var(--bad);background:var(--bad-bg)}
 .verdict .tag{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase}
 .verdict h2{font-family:var(--f-display);font-size:2rem;line-height:1.05;margin:0;letter-spacing:-.02em}

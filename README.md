@@ -85,3 +85,16 @@ npm test
 
 ### بوابات الاعتماد المتبقية
 تدقيق أسماء وأحكام كل مادة من جهة علمية وشرعية مؤهلة، التحقق من بيانات التراخيص الحالية في الاتحاد الأوروبي بحسب فئة الغذاء، التحقق من صلاحية شهادات المنتجات، وتجارب ميدانية على أجهزة حقيقية ومع عبوات فعلية. **غياب البيانات لا يساوي الحرام أو الحلال.**
+
+### Photo OCR troubleshooting (November 2026)
+Vercel runtime showed `gemini status 404` on `POST /api/read-label` using the previous default. The application now defaults to Google's documented **`gemini-3.8-flash`** (supports image input, JSON output) and returns `model_unavailable` for an upstream 404 rather than the generic error. Model availability depends on the **particular project's Gemini API key and entitlement**; a Vercel READY build does not test image processing.
+
+- Required secret: `GEMINI_API_KEY` in Vercel Production and Preview; **never commit a key or paste it into logs**.
+- Optional exact model ID: `GEMINI_MODEL=gemini-3.8-flash`. To change the model, set a supported ID and redeploy; the app never secretly selects a more expensive model.
+- `gemini-4-argon` is available but is deliberately **not** the default for routine ingredient OCR because of cost.
+- Photo quality: crop to the ingredient list, keep text large in frame, ensure sufficient focus and light, and compare the transcript with the packaging.
+- Return codes include `model_unavailable` (Google 404), `api_auth_error` (401/403), `upstream_invalid_request` (400), `upstream_busy` (429), `unreadable` and `upstream_timeout`. These codes never contain API credentials, photo bytes or user input.
+- Quick rules now recognize selected German and Scandinavian ingredient terms, **not all words in all languages**. Unmatched text is not evidence of halal approval; no text matches now produce an **insufficient evidence** result.
+- Reference: https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash
+
+Manual release validation remains required: real Gemini OCR with a production-like key, image permissions, PWA, physical mobile cameras, and scientific/fiqh review.

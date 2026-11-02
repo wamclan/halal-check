@@ -111,9 +111,9 @@
     const t = L();
     if (!(rd.product || rd.text || rd.halalMark || rd.dbHalal || rd.sourceUrl)) return;
     const d = el("div", "read");
-    const line = (label, val) => { const p = el("div"); p.append(el("b", null, label + ": "), document.createTextNode(val)); d.append(p); };
+    const line = (label, val) => { const p = el("div"); const value = el("span", "source-text", val); value.dir = "auto"; p.append(el("b", null, label + ": "), value); d.append(p); };
     if (rd.product) line(t.product, rd.brand ? rd.product + " (" + rd.brand + ")" : rd.product);
-    if (rd.text) line(t.read, rd.text);
+    if (rd.text) line(rd.sourceKind === "off" ? t.readFromDatabase : rd.sourceKind === "photo" ? t.readFromPhoto : t.read, rd.text);
     if (rd.halalMark) d.append(el("div", null, "✓ " + t.halalMark));
     if (rd.dbHalal) d.append(el("div", null, "✓ " + t.halalLabelDb));
     if (rd.sourceUrl) {
@@ -130,7 +130,7 @@
 
   function showAnalysis(mode, items, read) {
     let verdict = state.eng.verdictOf(items);
-    if (verdict === "ok" && items.some(i => i.status === "unknown")) verdict = "review";
+    if (verdict === "ok" && (items.some(i => i.status === "unknown") || (mode !== "e" && !items.length))) verdict = "review";
     state.result = {kind: "analysis", mode, items, verdict, read};
     render();
   }
@@ -196,6 +196,7 @@
       if (!j.found) { state.result = {kind: "message", msg: "notFound", goPhoto: true}; return render(); }
       if (!j.ingredients) { state.result = {kind: "message", msg: "noIngredients", goPhoto: true, read}; return render(); }
       read.text = j.ingredients;
+      read.sourceKind = "off";
       showAnalysis("barcode", supplementE(j.ingredients, state.eng.analyse(j.ingredients)), read);
     } catch (_) { setStatus("camStatus", L().errNetwork, true); }
   }
@@ -244,12 +245,17 @@
 
   function photoError(code) {
     const t = L();
-    return {not_configured: t.errNotConfigured, rate_limited: t.errRate, daily_cap: t.errDaily, bad_image: t.errImg, too_large: t.errTooLarge, refused: t.errRefused,
+    return {not_configured: t.errNotConfigured, api_auth_error: t.errApiAuth, invalid_model_config: t.errModel,
+      model_unavailable: t.errModel, upstream_invalid_request: t.errRequest,
+      rate_limited: t.errRate, daily_cap: t.errDaily, bad_image: t.errImg,
+      too_large: t.errTooLarge, refused: t.errRefused,
       unreadable: t.errUnreadable, upstream_busy: t.errBusy, upstream_timeout: t.errBusy}[code] || t.errGeneric;
   }
 
   async function readPhoto() {
     if (!state.file || !ready()) return;
+    // A previous barcode result is not a finding from the newly uploaded photo.
+    state.result = null; $("result").hidden = true; $("result").replaceChildren();
     setStatus("photoStatus", L().reading);
     $("btnPhoto").disabled = true; $("btnStop").hidden = false;
     state.ctl = new AbortController();
@@ -266,8 +272,8 @@
       const have = new Set(items.map(i => state.eng.norm(pick(i.name))));
       /* The AI may add doubts, never a haram verdict: its items are always "doubtful" and marked as suggestions. */
       (j.extra || []).forEach(x => { if (!have.has(state.eng.norm(x.term))) items.push({status: "warn", name: x.term, why: x.reason, ai: true}); });
-      if (!text && !j.product) { state.result = {kind: "message", msg: "none"}; return render(); }
-      showAnalysis("photo", items, {product: j.product, text, halalMark: j.halalMark});
+      if (!text) { state.result = {kind: "message", msg: "photoNoIngredients"}; return render(); }
+      showAnalysis("photo", items, {product: j.product, text, halalMark: j.halalMark, sourceKind: "photo"});
     } catch (e) {
       if (!(e && e.name === "AbortError")) setStatus("photoStatus", e && e.message === "image" ? L().errImg : L().errNetwork, true);
       else setStatus("photoStatus", "");
@@ -278,6 +284,8 @@
     const pv = $("preview");
     if (pv.dataset.url) { try { URL.revokeObjectURL(pv.dataset.url); } catch (_) {} pv.dataset.url = ""; }
     state.file = f || null;
+    // Avoid showing stale results from a different product below this image.
+    if (f) { state.result = null; $("result").hidden = true; $("result").replaceChildren(); }
     if (!f) { pv.hidden = true; $("dropIdle").hidden = false; $("btnPhoto").disabled = true; return; }
     const u = URL.createObjectURL(f); pv.dataset.url = u; pv.src = u; pv.hidden = false; $("dropIdle").hidden = true;
     $("btnPhoto").disabled = false; setStatus("photoStatus", "");

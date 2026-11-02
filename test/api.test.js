@@ -3,7 +3,7 @@ const assert = require("node:assert");
 const http = require("http");
 
 /* Fake Gemini and Open Food Facts servers so the real handlers run end to end without network or keys. */
-let lastGeminiBody = null, geminiMode = "ok";
+let lastGeminiBody = null, lastGeminiPath = null, geminiMode = "ok";
 const fake = http.createServer((req, res) => {
   const chunks = [];
   req.on("data", c => chunks.push(c));
@@ -11,11 +11,15 @@ const fake = http.createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
     if (req.url.startsWith("/v1beta/models/")) {
       lastGeminiBody = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+      lastGeminiPath = req.url;
       if (geminiMode === "429") { res.statusCode = 429; return res.end("{}"); }
+      if (geminiMode === "404") { res.statusCode = 404; return res.end("{}"); }
+      if (geminiMode === "403") { res.statusCode = 403; return res.end("{}"); }
+      if (geminiMode === "400") { res.statusCode = 400; return res.end("{}"); }
       if (geminiMode === "blocked") return res.end(JSON.stringify({promptFeedback: {blockReason: "SAFETY"}}));
       if (geminiMode === "garbage") return res.end(JSON.stringify({candidates: [{content: {parts: [{text: "sorry no"}]}}]}));
       const out = {product: "Koekjes", ingredients_text: "Tarwebloem, suiker, E471, gelatine\u0000", halal_mark: true,
-        extra: [{term: "Aroma", reason: "Kan alcohol bevatten."}, {term: "", reason: "x"}]};
+        extra: [{term: "gelatine", reason: "Controleer de herkomst."}, {term: "Imaginary pork", reason: "Hallucination."}]};
       return res.end(JSON.stringify({candidates: [{content: {parts: [{text: "```json\n" + JSON.stringify(out) + "\n```"}]}}]}));
     }
     if (req.url.includes("/api/v2/product/3017620422003")) {
@@ -56,6 +60,8 @@ test("read-label returns sanitized ingredients and forwards the image", async ()
   const parts = lastGeminiBody.contents[0].parts;
   assert.strictEqual(parts[1].inline_data.data, img);
   assert.ok(parts[0].text.includes("Dutch"));
+  assert.ok(parts[0].text.includes("German"));
+  assert.ok(lastGeminiPath.includes("/models/gemini-3.8-flash:generateContent"));
 });
 test("read-label rejects bad input", async () => {
   assert.strictEqual((await post({image: "***", mime: "image/jpeg"}, {"x-real-ip": "2.2.2.2"})).status, 400);
@@ -95,4 +101,22 @@ test("product lookup handles unknown and invalid codes", async () => {
   const j = await (await fetch(base + "/api/product?code=5000000000000", {headers: {"x-real-ip": "7.7.7.7"}})).json();
   assert.strictEqual(j.found, false);
   assert.strictEqual((await fetch(base + "/api/product?code=abc")).status, 400);
+});
+
+test("photo reader differentiates unavailable model and failed auth", async () => {
+  const request = async (ip) => post({image: img, mime: "image/jpeg"}, {"x-real-ip": ip});
+  geminiMode = "404";
+  assert.strictEqual((await (await request("8.8.8.1")).json()).code, "model_unavailable");
+  geminiMode = "403";
+  assert.strictEqual((await (await request("8.8.8.2")).json()).code, "api_auth_error");
+  geminiMode = "400";
+  assert.strictEqual((await (await request("8.8.8.3")).json()).code, "upstream_invalid_request");
+  geminiMode = "ok";
+});
+test("photo reader filters AI suggestions that do not occur in the transcription", () => {
+  const {sanitize} = require("../api/read-label")._test;
+  const result = sanitize({ingredients_text: "Magnesiumsalze der Speisefettsäuren, Vitamin B12",
+    extra: [{term: "Speisefettsäuren",reason:"Verify source."}, {term:"Gelatine",reason:"Invented term."}]});
+  assert.equal(result.extra.length, 1);
+  assert.equal(result.extra[0].term,"Speisefettsäuren");
 });

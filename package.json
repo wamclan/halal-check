@@ -1,6 +1,6 @@
 {
   "name": "halal-check",
-  "version": "0.3.0-evidence-preview",
+  "version": "0.3.1-ocr-fix",
   "private": true,
   "description": "Mobile halal ingredient checker (EN/NL/AR): barcode, photo and text.",
   "scripts": {

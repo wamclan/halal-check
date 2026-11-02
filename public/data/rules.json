@@ -1,10 +1,10 @@
 {
   "meta": {
-    "version": "0.2.1-evidence-safety",
-    "updated": "2026-11-01",
+    "version": "0.2.2-multilingual-photo",
+    "updated": "2026-11-02",
     "reviewStatus": "draft",
     "reviewedBy": null,
-    "note": "Unreviewed draft. Conservative flags only. Generic halal statements, plant/fish mentions or a brand's claim do not certify every ingredient. See docs/evidence-register-2026-11.md."
+    "note": "Draft origin-sensitive screening. Added limited German/Danish keywords and explicit no-verdict coverage policy. Does not validate supplier sources, certs or EU authorizations."
   },
   "rules": [
     {
@@ -35,7 +35,14 @@
         "الخنزير",
         "لحم الخنزير",
         "شحم الخنزير",
-        "لارد"
+        "لارد",
+        "Schweinefleisch",
+        "Schweinefett",
+        "Schweineschmalz",
+        "Schweinegelatine",
+        "svinekød",
+        "svinefedt",
+        "svinegelatine"
       ]
     },
     {
@@ -130,7 +137,12 @@
         "fish gelatin",
         "fish gelatine",
         "gelatine de poisson",
-        "Fischgelatine"
+        "Fischgelatine",
+        "Gelatine vom Schwein",
+        "Schweinegelatine",
+        "gelatine fra svin",
+        "svinegelatine",
+        "fiskegelatine"
       ],
       "clearedBy": "any"
     },
@@ -150,7 +162,10 @@
       "terms": [
         "collagen",
         "collageen",
-        "كولاجين"
+        "كولاجين",
+        "Kollagen",
+        "Kollagenhydrolysat",
+        "kollagen"
       ],
       "clearedBy": "any"
     },
@@ -181,7 +196,12 @@
         "talg",
         "دهون حيوانية",
         "دهن حيواني",
-        "شحم حيواني"
+        "شحم حيواني",
+        "tierisches Fett",
+        "tierische Fette",
+        "Talg",
+        "animalsk fedt",
+        "animalske fedtstoffer"
       ],
       "clearedBy": "halal"
     },
@@ -241,7 +261,13 @@
         "rennet",
         "stremsel",
         "منفحة",
-        "المنفحة"
+        "المنفحة",
+        "Lab",
+        "tierisches Lab",
+        "mikrobielles Lab",
+        "Labenzyme",
+        "løbe",
+        "osteløbe"
       ],
       "clearedBy": "any"
     },
@@ -266,7 +292,15 @@
         "mozzarella",
         "parmesan",
         "جبن",
-        "جبنة"
+        "جبنة",
+        "Käse",
+        "Hartkäse",
+        "Parmesankäse",
+        "Parmigiano Reggiano",
+        "Parmigiano Reggiano-ost",
+        "ost",
+        "hård ost",
+        "parmesanost"
       ],
       "clearedBy": "any"
     },
@@ -290,7 +324,13 @@
         "weipoeder",
         "melkserum",
         "مصل اللبن",
-        "مصل الحليب"
+        "مصل الحليب",
+        "Molke",
+        "Molkenpulver",
+        "Molkenprotein",
+        "valle",
+        "vallepulver",
+        "valleprotein"
       ],
       "clearedBy": "any"
     },
@@ -382,7 +422,13 @@
         "نكهة طبيعية",
         "نكهات طبيعية",
         "نكهة",
-        "نكهات"
+        "نكهات",
+        "Aromen",
+        "natürliches Aroma",
+        "natürliche Aromen",
+        "aromaer",
+        "naturlig aroma",
+        "smagsstoffer"
       ],
       "clearedBy": "any"
     },
@@ -428,7 +474,9 @@
         "emulgator",
         "emulgatoren",
         "مستحلب",
-        "مستحلبات"
+        "مستحلبات",
+        "Emulgatoren",
+        "emulgatorer"
       ],
       "clearedBy": "any",
       "skipWhenENumberPresent": true
@@ -508,7 +556,12 @@
         "إنزيمات",
         "انزيمات",
         "إنزيم",
-        "انزيم"
+        "انزيم",
+        "Enzyme",
+        "Enzympräparate",
+        "Osteløbe",
+        "osteløbe",
+        "enzymer"
       ],
       "clearedBy": "any"
     },
@@ -562,6 +615,56 @@
         "مسحوق العظام"
       ],
       "clearedBy": "any"
+    },
+    {
+      "id": "fatty-acid-salts",
+      "status": "warn",
+      "name": {
+        "en": "Fatty-acid salts (origin check)",
+        "nl": "Zouten van vetzuren (bron controleren)",
+        "ar": "أملاح الأحماض الدهنية (تحقق من المصدر)"
+      },
+      "reason": {
+        "en": "Fatty-acid salts may be made from vegetable or animal fats. The label alone does not identify the source; ask the manufacturer when relevant.",
+        "nl": "Vetzurezouten kunnen uit plantaardige of dierlijke vetten komen. Het etiket identificeert de herkomst niet; vraag de producent indien nodig.",
+        "ar": "قد تُصنع أملاح الأحماض الدهنية من دهون نباتية أو حيوانية. لا يوضح الملصق المصدر؛ يلزم التحقق من الشركة عند الحاجة."
+      },
+      "terms": [
+        "Magnesiumsalze der Speisefettsäuren",
+        "Speisefettsäuren",
+        "Calciumsalze der Speisefettsäuren",
+        "Salze der Speisefettsäuren",
+        "fatty acid salts",
+        "salts of fatty acids",
+        "fedtsyresalte",
+        "fedtsyrer",
+        "magnesiumsalte af fedtsyrer"
+      ]
+    },
+    {
+      "id": "vitamin-d3-source",
+      "status": "warn",
+      "name": {
+        "en": "Vitamin D3 (source check)",
+        "nl": "Vitamine D3 (bron controleren)",
+        "ar": "فيتامين D3 (تحقق من المصدر)"
+      },
+      "reason": {
+        "en": "Vitamin D3 can be produced from lanolin, fish, or other sources including lichen. Verify the supplier's source if this matters to the product assessment.",
+        "nl": "Vitamine D3 kan afkomstig zijn van lanoline, vis of andere bronnen zoals korstmos. Controleer de leveranciersbron indien relevant.",
+        "ar": "قد يُنتج فيتامين D3 من اللانولين أو السمك أو مصادر أخرى مثل الأشنات. يلزم التحقق من مصدر المورد عند الحاجة."
+      },
+      "terms": [
+        "vitamin D3",
+        "vitamin D₃",
+        "vitamine D3",
+        "Vitamin-D3",
+        "Cholecalciferol",
+        "Colecalciferol",
+        "kolekalciferol",
+        "كوليكالسيفيرول",
+        "فيتامين د3"
+      ]
     }
   ],
   "eNumbers": {
