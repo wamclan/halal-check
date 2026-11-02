@@ -60,3 +60,59 @@ test("PWA can reopen the evidence catalogue without a network", async ({page,con
   await expect(page.locator("#results .card").first()).toBeVisible();
   await context.setOffline(false);
 });
+
+
+const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/dLkAAAAASUVORK5CYII=", "base64");
+
+test("Scandinavian barcode terms reveal cheese source uncertainty instead of no flags", async ({page}) => {
+  await page.route("**/api/product?*", async route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({ok:true,found:true,name:"Caesar Dressing",brand:"Cardinis",
+      ingredients:"Rapsolie (62%), vann, egg, Parmigiano Reggiano-ost (mælk) (1%), ansjospaste, salt",
+      sourceUrl:"https://world.openfoodfacts.org/product/3017620422003"})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#barcodeInput").fill("3017620422003");
+  await page.locator("#btnLookup").click();
+  await expect(page.locator("#result .verdict h2")).toContainText("المصدر يحتاج إلى تحقق");
+  await expect(page.locator("#result")).toContainText("المكونات المسترجعة من Open Food Facts");
+  await expect(page.locator(".source-text").last()).toHaveAttribute("dir","auto");
+});
+test("photo Gemini model 404 shows targeted failure and clears previous barcode result", async ({page}) => {
+  await page.route("**/api/product?*", async route => route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,found:true,name:"Old product",ingredients:"gelatin"})
+  }));
+  await page.route("**/api/read-label", async route => route.fulfill({
+    status:502,contentType:"application/json",
+    body:JSON.stringify({ok:false,code:"model_unavailable"})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='en']").click();
+  await page.locator("#barcodeInput").fill("3017620422003");
+  await page.locator("#btnLookup").click();
+  await expect(page.locator("#result")).toContainText("Old product");
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#photoStatus")).toContainText("unavailable Gemini model");
+  await expect(page.locator("#result")).toBeHidden();
+});
+test("German supplement OCR result flags fatty-acid salts without invented verdict", async ({page}) => {
+  await page.route("**/api/read-label", async route => route.fulfill({
+    status:200,contentType:"application/json",
+    body:JSON.stringify({ok:true,product:"Magnesium B1 B6 B12 Folsäure",
+      ingredients:"Zutaten: Magnesiumoxide, mikrokristalline Cellulose, Trennmittel Magnesiumsalze der Speisefettsäuren, Folsäure, Vitamin B12",
+      extra:[],halalMark:false})
+  }));
+  await page.goto("http://127.0.0.1:3000/");
+  await page.locator(".langs button[data-lang='ar']").click();
+  await page.locator("#tab-photo").click();
+  await page.locator("#photoInput").setInputFiles({name:"label.png",mimeType:"image/png",buffer:png});
+  await page.locator("#btnPhoto").click();
+  await expect(page.locator("#result .verdict h2")).toContainText("المصدر يحتاج إلى تحقق");
+  await expect(page.locator("#result")).toContainText("أملاح الأحماض الدهنية");
+  await expect(page.locator("#result")).toContainText("المكونات المستخرجة من الصورة");
+  await expect(page.locator("#result")).not.toContainText("مكوّن حرام");
+});
